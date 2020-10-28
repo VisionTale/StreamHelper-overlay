@@ -1,0 +1,53 @@
+{% extends "overlay_base.html" %}
+
+{% block page_style -%}
+
+    <style>
+        #lower_third {
+            position: absolute;
+            top: 70%;
+            height: 12%;
+            left: 0;
+            width: 50%;
+            display: none;
+        }
+
+        #title {
+            background-color: {{ title_color }};
+            height: 65%;
+            width: 100%;
+            font-size: 39px;
+            color: {{ title_text_color }};
+            padding-left: 15%;
+            padding-top: 15px;
+        }
+
+        #subtitle {
+            background-color: {{ subtitle_color }};
+            height: 35%;
+            width: 100%;
+            font-size: 22px;
+            color: {{ subtitle_text_color }};
+            padding-left: 15%;
+            padding-top: 5px;
+        }
+
+    </style>
+
+{% endblock %}
+
+{% block page_content %}
+
+    <div id="lower_third">
+
+        <div id="title">{{ title }}</div>
+
+        <div id="subtitle">{{ subtitle }}</div>
+
+    </div>
+
+    <script>
+        $('#lower_third').fadeIn({{ fadein }}).delay({{ hold }}).fadeOut({{ fadeout }})
+    </script>
+
+{% endblock %}
