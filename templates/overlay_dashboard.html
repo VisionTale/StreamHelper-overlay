@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block page_style %}
+    <style>
+        .col-md-4 {
+            width: 100%;
+        }
+
+        .form-group {
+            display: inline-grid;
+        }
+
+        #play, #update, #stop, #delete {
+            margin: 3px 5px 3px 5px;
+        }
+
+        #update {
+            margin-right: 12px;
+        }
+    </style>
+{% endblock %}
+
+{% block page_content %}
+    <div class="jumbotron">
+        <h1 class="display-4">Dashboard</h1>
+        <div id="settings">
+            {{ wtf.quick_form(settings, form_type='inline') }}
+        </div>
+        <hr class="my-4">
+
+        <div class="col-md-4">
+                {% for name, form in forms %}
+                    <div>
+                        <h3>{{ name }}</h3>
+                        <div id="run">
+                            {{ wtf.quick_form(form, method='POST', form_type='horizontal', button_map={'play': 'success',
+                            'update': 'primary', 'stop': 'warning', 'delete': 'danger'}) }}
+                        </div>
+                    </div>
+                {% endfor %}
+                <script>
+                    const sr = document.querySelectorAll(".sr-only");
+                    [].forEach.call(sr, function(e) {
+                        e.classList.remove("sr-only");
+                    });
+                    const play = document.querySelectorAll("#play");
+                    [].forEach.call(play, function(e) {
+                        p = e.parentElement.parentElement;
+                        p.outerHTML = "<br>" + p.outerHTML
+                    });
+                </script>
+        </div>
+    </div>
+
+{% endblock %}

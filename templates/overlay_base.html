@@ -1,0 +1,40 @@
+{%- extends "bootstrap/base.html" %}
+
+{% block head %}
+    {{super()}}
+
+    <link rel="icon" type="image/ico" href="{{ url_for('static', filename='ico/visiontale16.ico') }}">
+
+    {% if title %}
+    <title>{{ title }} - Overlay</title>
+    {% else %}
+    <title>Overlay</title>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='frameworks/js/jquery-3.5.1.min.js') }}"></script>
+
+{%- endblock %}
+
+{% block styles -%}
+    {{super()}}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
+
+    <style>
+        body {
+            background-color: #00000000;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+    {% block page_style %}{% endblock %}
+{% endblock %}
+
+
+{% block content %}
+    <div class="container">
+
+        {# application content needs to be provided in the app_content block #}
+        {% block page_content %}{% endblock %}
+    </div>
+{% endblock %}
