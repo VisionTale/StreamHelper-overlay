@@ -18,6 +18,6 @@ def set_blueprint(blueprint: Blueprint):
     global bp
     bp = blueprint
 
-    from . import dashboard, api, routes
+    from . import dashboard, api
 
-    routes.create_routes()
+    api.definitions.create_routes()

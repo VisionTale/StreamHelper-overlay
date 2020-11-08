@@ -1,5 +1,3 @@
-from os.path import realpath, join, dirname
-
 from flask import render_template, request, flash
 from flask_login import login_required
 from flask_wtf.csrf import validate_csrf
@@ -8,6 +6,7 @@ from wtforms.validators import ValidationError
 
 from webapi.libs.network import is_up
 from webapi.libs.text import camel_case
+from webapi.libs.api.response import redirect_or_response
 
 from .. import bp, name
 from .forms import create_data_form, create_settings_form
@@ -68,6 +67,10 @@ def dashboard():
         if e.endswith('_definition'):
             defs[e.replace('_definition', '')] = getattr(definitions, e)
 
+    def_list = list(defs.keys())
+
+
+
     form_list = list()
     for e in defs:
         # Create the form for the overlay and save it
@@ -77,10 +80,11 @@ def dashboard():
     return render_template('overlay_dashboard.html', settings=settings, forms=form_list)
 
 
+
 def _init_server_config():
     from .. import config
     config.set_if_none(name, 'server', 'localhost:5250')
-    config.set_if_none(name, 'overlay_server', 'http://localhost:5000/overlay/')
+    config.set_if_none(name, 'casparcg_server', 'http://localhost:5000/overlay/')
 
 
 def _set_server_config(server: str, overlay_server: str):
@@ -88,7 +92,7 @@ def _set_server_config(server: str, overlay_server: str):
     if '://' in server:
         server = server.split('://')[1]
     config.set(name, 'server', server)
-    config.set(name, 'overlay_server', overlay_server)
+    config.set(name, 'casparcg_server', overlay_server)
 
 
 def _get_caspar_server_and_port() -> tuple:
