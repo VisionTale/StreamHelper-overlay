@@ -52,7 +52,7 @@ def create_settings_form(config) -> FlaskForm:
                              default=config.get(name, 'server'))
         overlay_server = StringField(label='Overlay Server URL (protocol://domain:port/path/to/overlay)',
                                      validators=[DataRequired()], default=config.get(name, 'overlay_server'))
-        submit = SubmitField(label='Save')
+        submit = SubmitField(label='Save', id="save_button")
 
         def validate_server(self, server):
             s, p = server.data.split(':')

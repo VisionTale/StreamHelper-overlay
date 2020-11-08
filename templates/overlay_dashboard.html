@@ -18,6 +18,11 @@
         #update {
             margin-right: 12px;
         }
+
+        #settings {
+            display: inline-grid;
+            min-width: 30vw;
+        }
     </style>
 {% endblock %}
 
@@ -25,32 +30,35 @@
     <div class="jumbotron">
         <h1 class="display-4">Dashboard</h1>
         <div id="settings">
-            {{ wtf.quick_form(settings, form_type='inline') }}
+            {{ wtf.quick_form(settings, id="settings") }}
         </div>
         <hr class="my-4">
 
         <div class="col-md-4">
-                {% for name, form in forms %}
-                    <div>
-                        <h3>{{ name }}</h3>
-                        <div id="run">
-                            {{ wtf.quick_form(form, method='POST', form_type='horizontal', button_map={'play': 'success',
-                            'update': 'primary', 'stop': 'warning', 'delete': 'danger'}) }}
-                        </div>
+            {% for name, form in forms %}
+                <div>
+                    <h3>{{ name }}</h3>
+                    <div id="run">
+                        {{ wtf.quick_form(form, method='POST', form_type='horizontal', button_map={'play': 'success',
+                        'update': 'primary', 'stop': 'warning', 'delete': 'danger'}) }}
                     </div>
-                {% endfor %}
-                <script>
-                    const sr = document.querySelectorAll(".sr-only");
-                    [].forEach.call(sr, function(e) {
-                        e.classList.remove("sr-only");
-                    });
-                    const play = document.querySelectorAll("#play");
-                    [].forEach.call(play, function(e) {
-                        p = e.parentElement.parentElement;
-                        p.outerHTML = "<br>" + p.outerHTML
-                    });
-                </script>
+                </div>
+            {% endfor %}
         </div>
     </div>
 
+{% endblock %}
+
+{% block page_scripts %}
+    <script>
+        const sr = document.querySelectorAll(".sr-only");
+        [].forEach.call(sr, function(e) {
+            e.classList.remove("sr-only");
+        });
+        const play = document.querySelectorAll("#play");
+        [].forEach.call(play, function(e) {
+            p = e.parentElement.parentElement;
+            p.outerHTML = "<br>" + p.outerHTML
+        });
+    </script>
 {% endblock %}
