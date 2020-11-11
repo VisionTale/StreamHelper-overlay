@@ -1,17 +1,10 @@
-from flask import render_template, request, flash
+from flask import render_template, request
 from flask_login import login_required
-from flask_wtf.csrf import validate_csrf
 
-from wtforms.validators import ValidationError
+from . import settings
+from .. import bp, name, config, logger
 
-from webapi.libs.network import is_up
-from webapi.libs.text import camel_case
-from webapi.libs.api.response import redirect_or_response
-
-from .. import bp, name
-from .forms import create_data_form, create_settings_form
-from .caspar_connector import is_caspar_up
-from .backend_connector import backend_request
+from webapi.libs.api.response import redirect_or_response, response
 
 
 @bp.route('/', methods=['POST', 'GET'])
@@ -22,79 +15,36 @@ def dashboard():
     Create a dashboard page.
     :return:
     """
-    from .. import config
-
-    # Create default config values
-    _init_server_config()
-
-    # Create the server settings form
-    settings = create_settings_form(config)
-
-    # Save config values if submitted
-    if settings.validate_on_submit():
-        _set_server_config(settings.server.data, settings.overlay_server.data)
-
-    # Read config values
-    server, port = _get_caspar_server_and_port()
-
-    if not is_up(server):
-        # Check if server is not reachable
-        flash(f"Server {server} is not reachable")
-        reachable = False
-    elif not is_caspar_up(server, port):
-        # Check if CasparCG server is not reachable
-        flash(f"CasparCG server on route {server} port {port} not reachable")
-        reachable = False
-    else:
-        reachable = True
-
-    # If a form was submitted, check the csrf token for security
-    validated = False
-    if request.form.get('csrf_token'):
-        try:
-            validate_csrf(request.form.get('csrf_token'))
-            validated = True
-        except ValidationError as e:
-            flash(f'ValidationError: {e}')
-
-    if reachable and validated:
-        backend_request(request.form.to_dict())
-
-    # MAGIC Parse routes file to get form values
-    from .. import definitions
-    defs = dict()
-    for e in dir(definitions):
-        if e.endswith('_definition'):
-            defs[e.replace('_definition', '')] = getattr(definitions, e)
-
-    def_list = list(defs.keys())
+    return render_template('overlay_dashboard.html',
+                           name=name,
+                           caspar=config.get_or_set(name, 'use_caspar', 'false'),
+                           caspar_server_url=config.get_or_set(name, 'caspar_server',
+                                                               request.url_root.split('/')[2].split(':')[0] + ':5250'),
+                           overlay_server_url=config.get_or_set(name, 'overlay_server',
+                                                                request.base_url.rstrip('/dashboard')),
+                           current_rundown=config.get_or_set(name, 'current_rundown', '')
+                           )
 
 
+@bp.route('/definitions/edit')
+def edit_definitions():
+    """
+    Edit a given file.
+    :return:
+    """
+    from ..api.definitions import get_definitions_file
+    from os.path import isfile
+    from json import dump
 
-    form_list = list()
-    for e in defs:
-        # Create the form for the overlay and save it
-        form = create_data_form(defs[e], e)
-        form_list.append((camel_case(e, '_'), form))
+    try:
+        if not isfile(get_definitions_file()):
+            if get_definitions_file() == '':
+                raise IOError('No definitions filepath set')
+            with open(get_definitions_file(), 'w') as f:
+                dump({}, f)
+        with open(get_definitions_file(), 'r') as f:
+            file_content = [line for line in f.readlines() if line != '\n']
+    except IOError as e:
+        return response(request, 400, 'File error: ' + str(e), graphical=True)
+    return render_template('edit_definitions.html', name=name, file_content=file_content)
 
-    return render_template('overlay_dashboard.html', settings=settings, forms=form_list)
-
-
-
-def _init_server_config():
-    from .. import config
-    config.set_if_none(name, 'server', 'localhost:5250')
-    config.set_if_none(name, 'casparcg_server', 'http://localhost:5000/overlay/')
-
-
-def _set_server_config(server: str, overlay_server: str):
-    from .. import config
-    if '://' in server:
-        server = server.split('://')[1]
-    config.set(name, 'server', server)
-    config.set(name, 'casparcg_server', overlay_server)
-
-
-def _get_caspar_server_and_port() -> tuple:
-    from .. import config
-    return config.get(name, 'server').split(':')

@@ -3,62 +3,127 @@
 
 {% block page_style %}
     <style>
-        .col-md-4 {
-            width: 100%;
-        }
 
-        .form-group {
-            display: inline-grid;
-        }
-
-        #play, #update, #stop, #delete {
-            margin: 3px 5px 3px 5px;
-        }
-
-        #update {
-            margin-right: 12px;
-        }
-
-        #settings {
-            display: inline-grid;
-            min-width: 30vw;
-        }
     </style>
 {% endblock %}
 
 {% block page_content %}
+    {% with this_page = url_for(name+'.dashboard') %}
     <div class="jumbotron">
         <h1 class="display-4">Dashboard</h1>
         <div id="settings">
-            {{ wtf.quick_form(settings, id="settings") }}
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="overlay_server_url_desc">Overlay Server (protocol://domain:port/path/to/overlay)</span>
+                </div>
+                <input
+                        type="text"
+                        class="form-control"
+                        id="overlay_server_url"
+                        aria-describedby="overlay_server_url_desc"
+                        value="{{ overlay_server_url }}"
+                        onblur="xhttp.open('GET', '{{ url_for(name+'.set_overlay_server_url') }}?redirect_url={{ this_page }}&url=' + this.value, true); xhttp.send();"
+                >
+            </div>
+            <div class="mb-3">
+                <a
+                    href="{{ url_for(name+'.edit_definitions') }}"
+                    role="button"
+                    class="btn"
+                >
+                Edit Definitions
+                </a>
+            </div>
+            {% if caspar == "true" %}
+                <div class="mb-3">
+                    <a
+                            href="{{ url_for(name+'.deactivate_caspar') }}?redirect_url={{ this_page }}"
+                            role="button"
+                            class="btn"
+                    >
+                        Deactivate Caspar
+                    </a>
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="caspar_server_url_desc">CasparCG Server (domain:port)</span>
+                    </div>
+                    <input
+                            type="text"
+                            class="form-control"
+                            id="caspar_server_url"
+                            aria-describedby="caspar_server_url_desc"
+                            value="{{ caspar_server_url }}"
+                            onblur="xhttp.open('GET', '{{ url_for(name+'.set_caspar_server_url') }}?redirect_url={{ this_page }}&url=' + this.value, true); xhttp.send();"
+                    >
+                </div>
+            {% else %}
+                <a
+                        href="{{ url_for(name+'.activate_caspar') }}?redirect_url={{ this_page }}"
+                        role="button"
+                        class="btn"
+                >
+                    Activate Caspar
+                </a>
+            {% endif %}
         </div>
         <hr class="my-4">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Select Or Create Rundown</span>
+            </div>
+            <!-- Combobox https://github.com/danielfarrell/bootstrap-combobox -->
+            <select class="custom-select" id="definition_add" aria-label="Add definition to current rundown">
+                <option selected>Choose...</option>
 
-        <div class="col-md-4">
-            {% for name, form in forms %}
-                <div>
-                    <h3>{{ name }}</h3>
-                    <div id="run">
-                        {{ wtf.quick_form(form, method='POST', form_type='horizontal', button_map={'play': 'success',
-                        'update': 'primary', 'stop': 'warning', 'delete': 'danger'}) }}
-                    </div>
-                </div>
-            {% endfor %}
+                <option value="">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+            </select>
+            <div class="input-group-append">
+                <button class="btn" type="button">+</button>
+            </div>
         </div>
-    </div>
+        {% if current_rundown != '' %}
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Add To Current Rundown</span>
+                </div>
+                <select class="custom-select" id="definition_add" aria-label="Add definition to current rundown">
+                    <option selected>Choose...</option>
 
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="3">Three</option>
+                </select>
+                <div class="input-group-append">
+                    <button class="btn" type="button">+</button>
+                </div>
+            </div>
+        {% endif %}
+
+
+
+    </div>
+    {% endwith %}
 {% endblock %}
 
 {% block page_scripts %}
     <script>
-        const sr = document.querySelectorAll(".sr-only");
-        [].forEach.call(sr, function(e) {
-            e.classList.remove("sr-only");
-        });
-        const play = document.querySelectorAll("#play");
-        [].forEach.call(play, function(e) {
-            p = e.parentElement.parentElement;
-            p.outerHTML = "<br>" + p.outerHTML
-        });
+        const xhttp = new XMLHttpRequest();
+        const overlay_url_input = document.getElementById('overlay_server_url');
+        overlay_url_input.addEventListener('keydown', function (event) {
+                if (event.key === "Enter") {
+                    overlay_url_input.blur()
+                }
+            }
+        )
+        const caspar_url_input = document.getElementById('caspar_server_url');
+        caspar_url_input.addEventListener('keydown', function (event) {
+                if (event.key === "Enter") {
+                    caspar_url_input.blur()
+                }
+            }
+        )
     </script>
 {% endblock %}

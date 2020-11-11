@@ -1,1 +1,1 @@
-from . import caspar, conversion, config
+from . import caspar, conversion

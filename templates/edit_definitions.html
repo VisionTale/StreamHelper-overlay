@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block page_style %}
+    <style>
+        #editor {
+            position: relative;
+            width: 100%;
+            height: 70vh;
+        }
+    </style>
+{% endblock %}
+
+{% block page_content %}
+    <div class="jumbotron">
+        <h1 class="display-4">Edit Definitions</h1>
+            <a
+                    class="btn btn-primary btn-lg fixed_button"
+                    role="button"
+                    onmousedown='
+                            console.log("hello");
+                            saveContent();
+                            document.location.href = "{{ url_for(name+'.dashboard') }}";
+                            '
+            >
+                Save And Exit
+            </a>
+
+
+        <hr class="my-4">
+
+        <div id="editor">{% for line in file_content %}{{ line }}{% endfor %}</div>
+
+    </div>
+{% endblock %}
+
+{% block page_scripts %}
+    <script src="{{ url_for('static', filename='ace-builds-'+get_ace_version()+'/src-noconflict/ace.js') }}" type="text/javascript" charset="utf-8"></script>
+    <script>
+        const editor = ace.edit("editor");
+        editor.setTheme("ace/theme/clouds_midnight");
+        editor.session.setMode("ace/mode/json");
+        const xhttp = new XMLHttpRequest();
+
+        document.addEventListener("keydown", function(e) {
+            if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.key === "s") {
+                e.preventDefault();
+                saveContent();
+            }
+        }, false);
+
+        function saveContent() {
+            xhttp.open("POST", "{{ url_for(name+'.save_definitions_content') }}", true);
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xhttp.send("content="+encodeURI(editor.getValue()));
+        }
+
+    </script>
+{% endblock %}

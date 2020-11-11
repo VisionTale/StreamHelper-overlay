@@ -3,18 +3,16 @@ from os.path import join
 
 from webapi.libs.api.response import redirect_or_response
 
-from .. import bp, config, name
+from .. import bp, config, name, logger
 from . import api_prefix
 
 definition_prefix: str = f'{api_prefix}/definitions'
 active_definitions: list = []
 definitions: list = []
 
-definitions_file = config.get_or_set(name, 'definitions_file', join(config.get('data_dir', 'definitions.json')))
-
 
 @bp.route(f'{definition_prefix}/add', methods=['GET'])
-def add():
+def add_definition():
 
     definition = request.args.get('definition')
     if not definition or definition == '':
@@ -25,7 +23,7 @@ def add():
 
 
 @bp.route(f'{definition_prefix}/remove', methods=['GET'])
-def remove():
+def remove_definition():
     definition = request.args.get('definition')
     if not definition or definition == '':
         return redirect_or_response(request, 400, 'Missing parameter "definition"')
@@ -34,18 +32,28 @@ def remove():
     _save()
 
 
-@bp.route(f'{definition_prefix}/list', methods=['GET'])
-def list():
+@bp.route(f'{definition_prefix}/show', methods=['GET'])
+def show_definition():
     definition = request.args.get('definition')
     if not definition or definition == '':
         return redirect_or_response(request, 400, 'Missing parameter "definition"')
 
 
 @bp.route(f'{definition_prefix}/reload', methods=['GET'])
-def reload():
-    global definitions
+def reload_definitions():
+    try:
+        _load_definitions_file()
+        return redirect_or_response(request, 200)
+    except SyntaxError as e:
+        return redirect_or_response(request, 400, e.msg)
 
 
+@bp.route(f'{definition_prefix}/save_content', methods=['POST'])
+def save_definitions_content():
+    from urllib.parse import unquote
+    content = unquote(request.form.get('content'))
+    with open(get_definitions_file(), 'w') as f:
+        f.write(content)
     return redirect_or_response(request, 200)
 
 
@@ -57,7 +65,7 @@ def create_routes():
 
         exec(
             f'''
-@bp.route('{definition_prefix}/show/{def_name}', methods=['GET'])
+@bp.route('{definition_prefix}/display/{def_name}', methods=['GET'])
 def {def_name}():
     kwargs = create_kwargs("{d}", request)
     return render_template('{def_name}.html', **kwargs)
@@ -84,11 +92,23 @@ def _load():
 def _load_definitions_file():
     definitions.clear()
     from json import load
-    with open(definitions_file, 'r') as f:
-        content = load(f)
+    with open(get_definitions_file(), 'r') as f:
+        content: dict = load(f)
     if not type(content) == dict:
         raise SyntaxError('Content is not a json object')
     for file_def in content:
-        if not type(content[file_def]):
+        if not type(content[file_def]) == dict:
             raise SyntaxError(f'Content of {file_def} is not a valid json array')
+        if 'filename' not in content.keys() or type(content[file_def]['filename']) != str:
+            raise SyntaxError(f'Content of {file_def} misses the filename attribute')
+        if 'fields' not in content.keys() or type(content[file_def]['fields']) != list:
+            raise SyntaxError(f'Content of {file_def} misses the fields attribute')
         definitions[file_def] = content[file_def]
+
+
+def get_definitions_file() -> str:
+    return config.get_or_set(name, 'definitions_file', join(config.get('webapi', 'data_dir'), 'definitions.json'))
+
+
+def set_definitions_file(filepath: str):
+    config.set(name, 'definitions_file', filepath)
