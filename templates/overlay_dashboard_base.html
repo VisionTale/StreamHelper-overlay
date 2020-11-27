@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block page_content %}
+    {% with this_page = url_for(name+'.dashboard'), redirect = 'redirect_url=' + url_for(name+'.dashboard') %}
+        <div class="jumbotron">
+            <h1 class="display-4">Dashboard</h1>
+            {% block settings %}{% endblock %}
+            <hr class="my-4">
+            {% if current_rundown %}
+                {% block rundown %}{% endblock %}
+            {% endif %}
+        </div>
+    {% endwith %}
+{% endblock %}

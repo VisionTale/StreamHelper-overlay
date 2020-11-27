@@ -2,6 +2,7 @@ from flask import Blueprint
 
 from webapi.libs.config import Config
 from webapi.libs.log import Logger
+from webapi.libs.system import create_folder
 
 description: str = "Get overlays for CasparCG, OBS and more"
 
@@ -12,12 +13,22 @@ config: Config = None
 provides_pages: list = [
     ('Overlay', 'dashboard')
 ]
+settings_folder: str = None
 
 
 def set_blueprint(blueprint: Blueprint):
-    global bp
+    """
+    Plugins factory method to set a blueprint.
+
+    :param blueprint:
+    """
+    global bp, settings_folder
     bp = blueprint
 
-    from . import dashboard, api
+    from os.path import join, isdir
+    from pathlib import Path
 
-    api.definitions.create_routes()
+    settings_folder = join(config.get('webapi', 'data_dir'), 'overlay')
+    create_folder(settings_folder)
+
+    from . import dashboard, api

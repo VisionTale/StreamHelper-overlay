@@ -1,7 +1,8 @@
-from flask import request
+from flask import request, url_for
 from urllib.parse import quote
+from typing import Tuple
 
-from webapi.libs.api.response import response
+from webapi.libs.api.response import response, redirect_or_response
 from webapi.libs.data_structures import inverse_stack
 
 from . import api_prefix
@@ -13,46 +14,53 @@ caspar_prefix: str = f'{api_prefix}/caspar'
 
 
 @bp.route('/play_html', methods=['GET'])
-def play_html():
+def caspar_play_html():
     form = request.args.to_dict()
-    route = form.pop('route')
     channel = form.pop('channel')
+    if not channel or channel == '':
+        return redirect_or_response(400, 'Missing parameter channel')
     layer = form.pop('layer')
+    if not layer or layer == '':
+        return redirect_or_response(400, 'Missing parameter layer')
+    display_type = form.pop('type')
+    if not display_type or display_type == '':
+        return redirect_or_response(400, 'Missing parameter type')
 
-    overlay_server = config.get(name, 'overlay_server')
-    if not overlay_server.endswith('/'):
-        overlay_server += '/'
+    overlay_server = _get_overlay_server()
 
     stack = inverse_stack(form, 'popitem')
     params = "&".join("%s=%s" % (quote(k.strip()), quote(v.strip())) for k, v in stack)
 
-    command = f'PLAY {channel}-{layer} [HTML] "{overlay_server}{route}?{params}"'
+    if display_type == 'definition':
+        command = f'PLAY {channel}-{layer} [HTML] "{overlay_server}{url_for(f"{name}.show_definition")}?{params}"'
+    else:
+        return response(400, "No valid display_type argument")
+    
+    server, port = _get_server_and_port()
 
-    server, port = config.get(name, 'server').split(':')
-
-    http_response_code = execute_command(server, port, command)
-    return response(request, http_response_code)
+    http_response_code = _execute_command(server, port, command)
+    return response(http_response_code)
 
 
 @bp.route('/clear', methods=['GET'])
-def clear():
+def caspar_clear():
     form = request.args.to_dict()
     channel = form.pop('channel')
+    if not channel or channel == '':
+        return redirect_or_response(400, 'Missing parameter channel')
     layer = form.pop('layer')
-
-    overlay_server = config.get(name, 'overlay_server')
-    if not overlay_server.endswith('/'):
-        overlay_server += '/'
+    if not layer or layer == '':
+        return redirect_or_response(400, 'Missing parameter layer')
 
     command = f'CLEAR {channel}-{layer}'
 
-    server, port = config.get(name, 'server').split(':')
+    server, port = _get_server_and_port()
 
-    http_response_code = execute_command(server, port, command)
-    return response(request, http_response_code)
+    http_response_code = _execute_command(server, port, command)
+    return response(http_response_code)
 
 
-def execute_command(server, port, command) -> int:
+def _execute_command(server, port, command) -> int:
     logger.debug(f'Invoked socket command to {server}:{port} "{command}"')
     response_code = 200
     try:
@@ -64,3 +72,15 @@ def execute_command(server, port, command) -> int:
     finally:
         connector.close()
     return response_code
+
+
+def _get_server_and_port() -> Tuple[str, str]:
+    return config.get(name, 'caspar_server').split(':')
+
+
+def _get_overlay_server() -> str:
+    overlay_server = config.get(name, 'overlay_server')
+    if not overlay_server.endswith('/'):
+        overlay_server += '/'
+        config.set(name, 'overlay_server', overlay_server)
+    return overlay_server

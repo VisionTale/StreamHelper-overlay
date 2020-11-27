@@ -20,6 +20,7 @@ from .backend_connector import backend_request
 def dashboard():
     """
     Create a dashboard page.
+
     :return:
     """
     from .. import config
@@ -69,8 +70,6 @@ def dashboard():
 
     def_list = list(defs.keys())
 
-
-
     form_list = list()
     for e in defs:
         # Create the form for the overlay and save it
@@ -78,7 +77,6 @@ def dashboard():
         form_list.append((camel_case(e, '_'), form))
 
     return render_template('overlay_dashboard.html', settings=settings, forms=form_list)
-
 
 
 def _init_server_config():

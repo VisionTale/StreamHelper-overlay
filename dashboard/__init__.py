@@ -1,10 +1,12 @@
 from flask import render_template, request
 from flask_login import login_required
 
-from . import settings
+from . import settings, rundown, definitions
 from .. import bp, name, config, logger
 
-from webapi.libs.api.response import redirect_or_response, response
+from webapi.libs.api.response import response
+
+rundown.load_rundowns()
 
 
 @bp.route('/', methods=['POST', 'GET'])
@@ -13,7 +15,8 @@ from webapi.libs.api.response import redirect_or_response, response
 def dashboard():
     """
     Create a dashboard page.
-    :return:
+
+    :return: rendered overlay page
     """
     return render_template('overlay_dashboard.html',
                            name=name,
@@ -21,18 +24,22 @@ def dashboard():
                            caspar_server_url=config.get_or_set(name, 'caspar_server',
                                                                request.url_root.split('/')[2].split(':')[0] + ':5250'),
                            overlay_server_url=config.get_or_set(name, 'overlay_server',
-                                                                request.base_url.rstrip('/dashboard')),
-                           current_rundown=config.get_or_set(name, 'current_rundown', '')
+                                                                request.base_url.rstrip(name + '/dashboard')),
+                           current_rundown_name=rundown.get_current_rundown_name(),
+                           current_rundown=rundown.get_current_rundown(),
+                           rundowns=rundown.get_rundowns(),
+                           definitions=definitions.get_definitions()
                            )
 
 
 @bp.route('/definitions/edit')
 def edit_definitions():
     """
-    Edit a given file.
-    :return:
+    Editor for the definitions file, identified by definitions.get_definitions_file().
+
+    :return: rendered file editor, or error page if file is not set or not read or writeable
     """
-    from ..api.definitions import get_definitions_file
+    from .definitions import get_definitions_file
     from os.path import isfile
     from json import dump
 
@@ -45,6 +52,5 @@ def edit_definitions():
         with open(get_definitions_file(), 'r') as f:
             file_content = [line for line in f.readlines() if line != '\n']
     except IOError as e:
-        return response(request, 400, 'File error: ' + str(e), graphical=True)
+        return response(400, 'File error: ' + str(e), graphical=True)
     return render_template('edit_definitions.html', name=name, file_content=file_content)
-

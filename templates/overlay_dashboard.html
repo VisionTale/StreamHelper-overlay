@@ -1,129 +1,289 @@
-{% extends "base.html" %}
+{% extends "overlay_dashboard_base.html" %}
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block page_style %}
     <style>
+        .input-group-text, .btn, input {
+            border-radius: 0 !important;
+        }
 
+        .row {
+            margin: 0 0 0 0;
+        }
+
+        .input-group {
+            padding: 0 !important;
+        }
+
+        #settings, .definition-section {
+            margin-left: 15px;
+        }
     </style>
-{% endblock %}
-
-{% block page_content %}
-    {% with this_page = url_for(name+'.dashboard') %}
-    <div class="jumbotron">
-        <h1 class="display-4">Dashboard</h1>
-        <div id="settings">
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <span class="input-group-text" id="overlay_server_url_desc">Overlay Server (protocol://domain:port/path/to/overlay)</span>
-                </div>
-                <input
-                        type="text"
-                        class="form-control"
-                        id="overlay_server_url"
-                        aria-describedby="overlay_server_url_desc"
-                        value="{{ overlay_server_url }}"
-                        onblur="xhttp.open('GET', '{{ url_for(name+'.set_overlay_server_url') }}?redirect_url={{ this_page }}&url=' + this.value, true); xhttp.send();"
-                >
-            </div>
-            <div class="mb-3">
-                <a
-                    href="{{ url_for(name+'.edit_definitions') }}"
-                    role="button"
-                    class="btn"
-                >
-                Edit Definitions
-                </a>
-            </div>
-            {% if caspar == "true" %}
-                <div class="mb-3">
-                    <a
-                            href="{{ url_for(name+'.deactivate_caspar') }}?redirect_url={{ this_page }}"
-                            role="button"
-                            class="btn"
-                    >
-                        Deactivate Caspar
-                    </a>
-                </div>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="caspar_server_url_desc">CasparCG Server (domain:port)</span>
-                    </div>
-                    <input
-                            type="text"
-                            class="form-control"
-                            id="caspar_server_url"
-                            aria-describedby="caspar_server_url_desc"
-                            value="{{ caspar_server_url }}"
-                            onblur="xhttp.open('GET', '{{ url_for(name+'.set_caspar_server_url') }}?redirect_url={{ this_page }}&url=' + this.value, true); xhttp.send();"
-                    >
-                </div>
-            {% else %}
-                <a
-                        href="{{ url_for(name+'.activate_caspar') }}?redirect_url={{ this_page }}"
-                        role="button"
-                        class="btn"
-                >
-                    Activate Caspar
-                </a>
-            {% endif %}
-        </div>
-        <hr class="my-4">
-        <div class="input-group mb-3">
-            <div class="input-group-prepend">
-                <span class="input-group-text">Select Or Create Rundown</span>
-            </div>
-            <!-- Combobox https://github.com/danielfarrell/bootstrap-combobox -->
-            <select class="custom-select" id="definition_add" aria-label="Add definition to current rundown">
-                <option selected>Choose...</option>
-
-                <option value="">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-            </select>
-            <div class="input-group-append">
-                <button class="btn" type="button">+</button>
-            </div>
-        </div>
-        {% if current_rundown != '' %}
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Add To Current Rundown</span>
-                </div>
-                <select class="custom-select" id="definition_add" aria-label="Add definition to current rundown">
-                    <option selected>Choose...</option>
-
-                    <option value="1">One</option>
-                    <option value="2">Two</option>
-                    <option value="3">Three</option>
-                </select>
-                <div class="input-group-append">
-                    <button class="btn" type="button">+</button>
-                </div>
-            </div>
-        {% endif %}
-
-
-
-    </div>
-    {% endwith %}
 {% endblock %}
 
 {% block page_scripts %}
     <script>
-        const xhttp = new XMLHttpRequest();
-        const overlay_url_input = document.getElementById('overlay_server_url');
-        overlay_url_input.addEventListener('keydown', function (event) {
-                if (event.key === "Enter") {
-                    overlay_url_input.blur()
-                }
+        const overlayUrlInput = document.getElementById('overlay_server_url');
+        overlayUrlInput.addEventListener('keydown', function (event) {
+            if (event.key === "Enter") {
+                overlayUrlInput.blur()
             }
-        )
-        const caspar_url_input = document.getElementById('caspar_server_url');
-        caspar_url_input.addEventListener('keydown', function (event) {
-                if (event.key === "Enter") {
-                    caspar_url_input.blur()
-                }
+        });
+        const casparUrlInput = document.getElementById('caspar_server_url');
+        casparUrlInput.addEventListener('keydown', function (event) {
+            if (event.key === "Enter") {
+                casparUrlInput.blur()
             }
-        )
+        });
+        const rundownAdd = document.getElementById('rundown_add');
+        const rundownAddBtn = document.getElementById('rundown_add_btn');
+        rundownAdd.addEventListener('keydown', function (event) {
+            if (event.key === "Enter") {
+                rundownAddBtn.click();
+            }
+        });
+        const paramBtns = document.getElementsByClassName('param_btn');
+        for (let i = 0; i < paramBtns; i++) {
+            paramBtns[i].addEventListener('keydown', function (event) {
+                if (event.key === "Enter") {
+                    paramBtns[i].blur();
+                }
+            })
+        }
+
     </script>
+{% endblock %}
+
+{% block settings %}
+    <div class="mb-3">
+        <button
+                class="btn" type="button" id="settings-btn"
+                onclick='settings=document.getElementById("settings"); settings.hidden=!settings.hidden;'
+        >
+            Settings
+        </button>
+    </div>
+    <div id="settings" hidden>
+        <div class="row mb-2">
+            <div class="input-group col-6">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Select Rundown</span>
+                </div>
+                <select
+                        class="custom-select" id="rundown_select"
+                        aria-label="Select rundown"
+                        onchange='
+                                name=this.value;
+                                $.get("{{ url_for(name+'.set_current_rundown') }}", {
+                                name: name
+                                }).done(() => {location.reload();})
+                                '
+                >
+                    {% if current_rundown_name == '' %}
+                        <option selected>Choose...</option>
+                    {% endif %}
+
+                    {% for rundown in rundowns.keys() %}
+                        <option
+                                {% if rundown == current_rundown_name %}selected{% endif %}
+                                value="{{ rundown }}"
+                        >
+                            {{ rundowns[rundown]['display_name'] }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="input-group-append">
+                    <button
+                            class="btn"
+                            type="button"
+                            onclick='
+                                    name=document.getElementById("rundown_select").value;
+                                    $.get("{{ url_for(name+'.remove_rundown') }}", {
+                                    redirect_url: "{{ this_page }}",
+                                    name: name
+                                    }).done(() => {location.reload();})
+                                    '
+                    >
+                        -
+                    </button>
+                </div>
+            </div>
+            <div class="input-group col-6">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">New Rundown</span>
+                </div>
+                <input
+                        type="text"
+                        class="form-control" id="rundown_add"
+                        aria-label="Add rundown"
+                >
+                <div class="input-group-append">
+                    <button
+                            type="button"
+                            class="btn" id="rundown_add_btn"
+                            onclick='
+                                    display_name=document.getElementById("rundown_add").value;
+                                    name=display_name.replace(" ", "_").toLowerCase();
+                                    $.get("{{ url_for(name+'.add_rundown') }}", {
+                                    redirect_url: "{{ this_page }}",
+                                    display_name: display_name,
+                                    name: name
+                                    }).done(() => {location.reload();})
+                                    '
+                    >
+                        +
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group mb-2">
+            <div class="input-group-prepend">
+                <span class="input-group-text"
+                      id="overlay_server_url_desc">Overlay Server (protocol://domain:port/)</span>
+            </div>
+            <input
+                    type="text" value="{{ overlay_server_url }}"
+                    class="form-control" id="overlay_server_url"
+                    aria-describedby="overlay_server_url_desc" aria-label="Set Overlay Server URL"
+                    oninput="$.get('{{ url_for(name+'.set_overlay_server_url') }}', {url: this.value})"
+            >
+        </div>
+        <div class="mb-2">
+            <a href="{{ url_for(name+'.edit_definitions') }}" class="btn" role="button">Edit Definitions</a>
+        </div>
+        {% if caspar == "true" %}
+            <div class="mb-2">
+                <a href="{{ url_for(name+'.deactivate_caspar') }}?{{ redirect }}" class="btn" role="button">Deactivate
+                    Caspar</a>
+            </div>
+            <div class="input-group mb-2">
+                <div class="input-group-prepend">
+                            <span class="input-group-text"
+                                  id="caspar_server_url_desc">CasparCG Server (domain:port)</span>
+                </div>
+                <input
+                        type="text" value="{{ caspar_server_url }}"
+                        class="form-control" id="caspar_server_url"
+                        aria-describedby="caspar_server_url_desc" aria-label="Set Caspar Server URL"
+                        oninput="$.get('{{ url_for(name+'.set_caspar_server_url') }}', {url: this.value})"
+                >
+            </div>
+        {% else %}
+            <a href="{{ url_for(name+'.activate_caspar') }}?{{ redirect }}" class="btn" role="button">Activate
+                Caspar</a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block rundown %}
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Add Definition</span>
+        </div>
+        <select class="custom-select" id="definition_add" aria-label="Add definition to current rundown">
+            <option selected>Choose...</option>
+            {% for definition in definitions %}
+                <option value="{{ definition }}">{{ definitions[definition].get('display_name', definition) }}</option>
+            {% endfor %}
+        </select>
+        <div class="input-group-append">
+            <button
+                    class="btn"
+                    type="button"
+                    onclick='
+                            name=document.getElementById("definition_add").value;
+                            $.get("{{ url_for(name+'.add_definition') }}", {
+                            redirect_url: "{{ this_page }}",
+                            name: name
+                            }).done(() => {location.reload();})
+                            '
+            >
+                +
+            </button>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        {% for pos, run in enumerate(current_rundown['rundown']) %}
+            {% if run['name'] in definitions %}
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <a class="input-group-text" role="textbox">{{ pos }}</a>
+                        <a
+                                class="input-group-text"
+                                role="button"
+                                onmousedown="
+                                        form = document.getElementById('{{ run['id'] }}');
+                                        form.hidden=!form.hidden;"
+                        >
+                            {{ run.get('display_name', run['name']) }}
+                        </a>
+                        {% if caspar == "true" %}
+                            <a
+                                    class="input-group-text"
+                                    role="button"
+                                    onmousedown="$.get('{{ url_for(name+'.definition_exec') }}', { uuid: '{{ run['id'] }}', service: 'caspar', action: 'html' });"
+                            >
+                                Play
+                            </a>
+                            <a
+                                    class="input-group-text"
+                                    role="button"
+                                    onmousedown="$.get('{{ url_for(name+'.definition_exec') }}', { uuid: '{{ run['id'] }}', service: 'caspar', action: 'stop' });"
+                            >
+                                Stop
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% with definition = definitions[run['name']]['fields'] %}
+                    <div id="{{ run['id'] }}" class="definition-section" hidden>
+                        {% if caspar == "true" %}
+                            <div class="row mb-2 mt-2">
+                                <div class="input-group col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Channel</span>
+                                    </div>
+                                    <input
+                                            class="form-control param_btn"
+                                            aria-label="Set caspar channel for definition {{ run['name'] }}"
+                                            value="{{ run['values'].get('channel', '1') }}" type="number"
+                                            oninput="$.get('{{ url_for(name+'.save_value') }}', { uuid: '{{ run['id'] }}', key: 'channel', value: this.value})"
+                                    >
+                                </div>
+                                <div class="input-group col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Layer</span>
+                                    </div>
+                                    <input
+                                            class="form-control param_btn"
+                                            aria-label="Set caspar layer for definition {{ run['name'] }}"
+                                            value="{{ run['values'].get('layer', '10') }}" type="number"
+                                            oninput="$.get('{{ url_for(name+'.save_value') }}', { uuid: '{{ run['id'] }}', key: 'layer', value: this.value})"
+                                    >
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="row mb-2">
+                            {% for field in definition %}
+                                <div class="input-group col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">{{ camel_case(field[0], '_') }}</span>
+                                    </div>
+                                    <input
+                                            class="form-control param_btn"
+                                            aria-label="Set {{ field[0] }} value for definition {{ run['name'] }}"
+                                            {% if len(field) > 1 %}value="{{ run['values'].get(field[0], field[1]) }}"{% endif %}
+                                            {% if len(field) > 2 %}type="{{ field[2] }}"{% endif %}
+                                            oninput="$.get('{{ url_for(name+'.save_value') }}', { uuid: '{{ run['id'] }}', key: '{{ field[0] }}', value: this.value})"
+                                    >
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endwith %}
+            {% endif %}
+        {% endfor %}
+    </div>
 {% endblock %}

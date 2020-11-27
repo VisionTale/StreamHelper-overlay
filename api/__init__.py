@@ -1,11 +1,20 @@
+"""
+Basic overlay api setup.
+"""
+
 api_prefix: str = '/api'
 
-from .. import bp
+from webapi.libs.api.response import response
 
-from . import caspar, definitions
+from .. import bp
+from . import caspar
 
 
 @bp.route(f'{api_prefix}/ping', methods=['GET'])
 def ping():
-    return "", 200
+    """
+    Returns an empty 200 response.
 
+    :return: 200 response
+    """
+    return response(200)

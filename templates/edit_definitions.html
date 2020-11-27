@@ -15,13 +15,9 @@
     <div class="jumbotron">
         <h1 class="display-4">Edit Definitions</h1>
             <a
-                    class="btn btn-primary btn-lg fixed_button"
-                    role="button"
-                    onmousedown='
-                            console.log("hello");
-                            saveContent();
-                            document.location.href = "{{ url_for(name+'.dashboard') }}";
-                            '
+                class="btn btn-primary btn-lg fixed_button"
+                role="button"
+                onmousedown='saveContent(true);'
             >
                 Save And Exit
             </a>
@@ -40,20 +36,22 @@
         const editor = ace.edit("editor");
         editor.setTheme("ace/theme/clouds_midnight");
         editor.session.setMode("ace/mode/json");
-        const xhttp = new XMLHttpRequest();
 
         document.addEventListener("keydown", function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.key === "s") {
                 e.preventDefault();
-                saveContent();
+                saveContent(false);
             }
         }, false);
 
-        function saveContent() {
-            xhttp.open("POST", "{{ url_for(name+'.save_definitions_content') }}", true);
-            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            xhttp.send("content="+encodeURI(editor.getValue()));
+        function saveContent(backToDashboard=false) {
+            $.post("{{ url_for(name+'.save_definitions_content') }}", {
+                content: editor.getValue()
+            }).done(() => {
+                if (backToDashboard) {
+                    document.location.href = "{{ url_for(name+'.dashboard') }}";
+                }
+            })
         }
-
     </script>
 {% endblock %}
