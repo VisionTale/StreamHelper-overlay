@@ -1,7 +1,6 @@
 {% extends "overlays/overlay_base.html" %}
 
 {% block page_style -%}
-
     <style>
         #centered_title {
             position: fixed;
@@ -19,23 +18,11 @@
             color: {{ title_text_color }};
             padding: 10px;
         }
-
-
-
     </style>
-
 {% endblock %}
 
 {% block page_content %}
-
     <div id="centered_title">
-
         <div id="title">{{ title }}</div>
-
     </div>
-
-    <script>
-        $('#centered_title').fadeIn({{ fadein }}).delay({{ hold }}).fadeOut({{ fadeout }})
-    </script>
-
 {% endblock %}
