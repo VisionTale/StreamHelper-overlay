@@ -4,6 +4,7 @@ from typing import Tuple
 
 from webapi.libs.api.response import response, redirect_or_response
 from webapi.libs.data_structures import inverse_stack
+from webapi.libs.api.parsing import is_set, param
 
 from . import api_prefix
 
@@ -13,17 +14,17 @@ from ..libs.caspar import connector
 caspar_prefix: str = f'{api_prefix}/caspar'
 
 
-@bp.route('/play_html', methods=['GET'])
+@bp.route(f'{caspar_prefix}/play_html', methods=['GET', 'POST'])
 def caspar_play_html():
-    form = request.args.to_dict()
+    form = request.args.to_dict() or request.form.to_dict()
     channel = form.pop('channel')
-    if not channel or channel == '':
+    if not is_set(channel):
         return redirect_or_response(400, 'Missing parameter channel')
     layer = form.pop('layer')
-    if not layer or layer == '':
+    if not is_set(layer):
         return redirect_or_response(400, 'Missing parameter layer')
     display_type = form.pop('type')
-    if not display_type or display_type == '':
+    if not is_set(display_type):
         return redirect_or_response(400, 'Missing parameter type')
 
     overlay_server = _get_overlay_server()
@@ -42,14 +43,33 @@ def caspar_play_html():
     return response(http_response_code)
 
 
-@bp.route('/clear', methods=['GET'])
-def caspar_clear():
-    form = request.args.to_dict()
-    channel = form.pop('channel')
-    if not channel or channel == '':
+@bp.route(f'{caspar_prefix}/call', methods=['GET', 'POST'])
+def caspar_call():
+    channel = param('channel')
+    if not is_set(channel):
         return redirect_or_response(400, 'Missing parameter channel')
-    layer = form.pop('layer')
-    if not layer or layer == '':
+    layer = param('layer')
+    if not is_set(layer):
+        return redirect_or_response(400, 'Missing parameter layer')
+    javascript = param('javascript')
+    if not is_set(javascript):
+        return redirect_or_response(400, 'Missing parameter javascript')
+
+    command = f'CALL {channel}-{layer} {javascript}'
+
+    server, port = _get_server_and_port()
+
+    http_response_code = _execute_command(server, port, command)
+    return response(http_response_code)
+
+
+@bp.route(f'{caspar_prefix}/clear', methods=['GET', 'POST'])
+def caspar_clear():
+    channel = param('channel')
+    if not is_set(channel):
+        return redirect_or_response(400, 'Missing parameter channel')
+    layer = param('layer')
+    if not is_set(layer):
         return redirect_or_response(400, 'Missing parameter layer')
 
     command = f'CLEAR {channel}-{layer}'
