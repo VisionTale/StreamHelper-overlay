@@ -1,7 +1,7 @@
 from flask import render_template, request
 from flask_login import login_required
 
-from . import settings, rundown, definitions
+from . import settings, rundown, actions
 from .. import bp, name, config, logger
 
 from webapi.libs.api.response import response
@@ -28,29 +28,29 @@ def dashboard():
                            current_rundown_name=rundown.get_current_rundown_name(),
                            current_rundown=rundown.get_current_rundown(),
                            rundowns=rundown.get_rundowns(),
-                           definitions=definitions.get_definitions()
+                           actions=actions.get_actions()
                            )
 
 
-@bp.route('/definitions/edit')
-def edit_definitions():
+@bp.route('/actions/edit')
+def edit_actions():
     """
-    Editor for the definitions file, identified by definitions.get_definitions_file().
+    Editor for the actions file, identified by actions.get_actions_file().
 
     :return: rendered file editor, or error page if file is not set or not read or writeable
     """
-    from .definitions import get_definitions_file
+    from .actions import get_actions_file
     from os.path import isfile
     from json import dump
 
     try:
-        if not isfile(get_definitions_file()):
-            if get_definitions_file() == '':
-                raise IOError('No definitions filepath set')
-            with open(get_definitions_file(), 'w') as f:
+        if not isfile(get_actions_file()):
+            if get_actions_file() == '':
+                raise IOError('No actions filepath set')
+            with open(get_actions_file(), 'w') as f:
                 dump({}, f)
-        with open(get_definitions_file(), 'r') as f:
+        with open(get_actions_file(), 'r') as f:
             file_content = [line for line in f.readlines() if line != '\n']
     except IOError as e:
         return response(400, 'File error: ' + str(e), graphical=True)
-    return render_template('edit_definitions.html', name=name, file_content=file_content)
+    return render_template('edit_actions.html', name=name, file_content=file_content)

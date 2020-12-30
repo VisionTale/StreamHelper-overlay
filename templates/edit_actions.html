@@ -13,7 +13,7 @@
 
 {% block page_content %}
     <div class="jumbotron">
-        <h1 class="display-4">Edit Definitions</h1>
+        <h1 class="display-4">Edit Actions</h1>
             <a
                 class="btn btn-primary btn-lg fixed_button"
                 role="button"
@@ -45,7 +45,7 @@
         }, false);
 
         function saveContent(backToDashboard=false) {
-            $.post("{{ url_for(name+'.save_definitions_file_content') }}", {
+            $.post("{{ url_for(name+'.save_actions_file_content') }}", {
                 content: editor.getValue()
             }).done(() => {
                 if (backToDashboard) {

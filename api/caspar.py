@@ -32,8 +32,8 @@ def caspar_play_html():
     stack = inverse_stack(form, 'popitem')
     params = "&".join("%s=%s" % (quote(k.strip()), quote(v.strip())) for k, v in stack)
 
-    if display_type == 'definition':
-        command = f'PLAY {channel}-{layer} [HTML] "{overlay_server}{url_for(f"{name}.show_definition")}?{params}"'
+    if display_type == 'action':
+        command = f'PLAY {channel}-{layer} [HTML] "{overlay_server}{url_for(f"{name}.show_action")}?{params}"'
     else:
         return response(400, "No valid display_type argument")
     

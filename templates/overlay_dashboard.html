@@ -16,7 +16,7 @@
             padding: 0 !important;
         }
 
-        #settings, .definition-section {
+        #settings, .action-section {
             margin-left: 15px;
         }
     </style>
@@ -86,8 +86,8 @@
         {{ end_event_listener() }}
 
         {% if current_rundown %}
-            {{ start_event_listener('definition-add-btn') }}
-                {{ post('add_definition', data='{ name: DefinitionAdd.value }', after=reload()) }}
+            {{ start_event_listener('action-add-btn') }}
+                {{ post('add_action', data='{ name: ActionAdd.value }', after=reload()) }}
             {{ end_event_listener() }}
         {% endif %}
 
@@ -100,13 +100,13 @@
         {{ end_event_listener() }}
 
         {% for pos, run in enumerate(current_rundown['rundown']) %}
-            {% if run['name'] in definitions %}
-                {{ start_event_listener('definition-rename-save-%s' % run['id']) }}
+            {% if run['name'] in actions %}
+                {{ start_event_listener('action-rename-save-%s' % run['id']) }}
                     {{ get_value('name', 'textarea-rename-'+run['id']) }}
-                    {{ post(url='rename_definition', data='{uuid: \'%s\', name: name}' % run['id'], after=reload()) }}
+                    {{ post(url='rename_action', data='{uuid: \'%s\', name: name}' % run['id'], after=reload()) }}
                 {{ end_event_listener() }}
-                {{ start_event_listener('definition-rename-delete-%s' % run['id']) }}
-                    {{ post(url='remove_definition', data='{uuid: "%s"}' % run['id'], after=reload()) }}
+                {{ start_event_listener('action-rename-delete-%s' % run['id']) }}
+                    {{ post(url='remove_action', data='{uuid: "%s"}' % run['id'], after=reload()) }}
                 {{ end_event_listener() }}
             {% endif %}
         {% endfor %}
@@ -161,7 +161,7 @@
             <input type="text" value="{{ overlay_server_url }}" class="form-control" id="overlay-server-url" aria-describedby="overlay-server-url-desc" aria-label="Set Overlay Server URL">
         </div>
         <div class="mb-2">
-            {{ create_button('Edit Definitions', href=url_for(name+'.edit_definitions')) }}
+            {{ create_button('Edit Actions', href=url_for(name+'.edit_actions')) }}
         </div>
         {% if caspar == "true" %}
             <div class="mb-2">
@@ -187,56 +187,56 @@
 {% block rundown %}
     <div class="input-group mb-3">
         <div class="input-group-prepend">
-            <span class="input-group-text">Add Definition</span>
+            <span class="input-group-text">Add Action</span>
         </div>
-        <select class="custom-select" id="definition-add" aria-label="Add definition to current rundown">
+        <select class="custom-select" id="action-add" aria-label="Add action to current rundown">
             <option selected>Choose...</option>
-            {% for definition in definitions %}
-                <option value="{{ definition }}">{{ definitions[definition].get('display_name', definition) }}</option>
+            {% for action in actions %}
+                <option value="{{ action }}">{{ actions[action].get('display_name', action) }}</option>
             {% endfor %}
         </select>
         <div class="input-group-append">
-            {{ create_button("", icon="plus", id="definition-add-btn") }}
+            {{ create_button("", icon="plus", id="action-add-btn") }}
         </div>
     </div>
 
     <div class="mb-3">
         {% for pos, run in enumerate(current_rundown['rundown']) %}
-            {% if run['name'] in definitions %}
+            {% if run['name'] in actions %}
                 <div class="input-group">
                     <div class="input-group-prepend">
                         {{ create_button(pos, classes="input-group-text", role="textbox") }}
                         {{ create_button(run.get('display_name', run['name']), classes="input-group-text", event=toggle_element(run['id'])) }}
                         {% if caspar == "true" %}
-                            {{ create_button("", icon="play", classes="input-group-text", event=post('definition_exec', data="{ uuid: '%s', service: 'caspar', action: 'html' }" % run['id'])) }}
-                            {{ create_button("", icon="stop", classes="input-group-text", event=post('definition_exec', data="{ uuid: '%s', service: 'caspar', action: 'stop' }" % run['id'])) }}
-                            {{ create_button(value="", icon="times", classes="input-group-text", event=post('definition_exec', data="{ uuid: '%s', service: 'caspar', action: 'clear' }" % run['id'])) }}
+                            {{ create_button("", icon="play", classes="input-group-text", event=post('action_exec', data="{ uuid: '%s', service: 'caspar', event: 'html' }" % run['id'])) }}
+                            {{ create_button("", icon="stop", classes="input-group-text", event=post('action_exec', data="{ uuid: '%s', service: 'caspar', event: 'stop' }" % run['id'])) }}
+                            {{ create_button(value="", icon="times", classes="input-group-text", event=post('action_exec', data="{ uuid: '%s', service: 'caspar', event: 'clear' }" % run['id'])) }}
                         {% endif %}
-                        {{ create_button("", icon="pen", classes="input-group-text", data_toggle="modal", data_target="#definition-rename-%s" % run['id']) }}
-                        {{ create_button("", icon="trash", classes="input-group-text", data_toggle="modal", data_target="#definition-deletion-%s" % run['id']) }}
+                        {{ create_button("", icon="pen", classes="input-group-text", data_toggle="modal", data_target="#action-rename-%s" % run['id']) }}
+                        {{ create_button("", icon="trash", classes="input-group-text", data_toggle="modal", data_target="#action-deletion-%s" % run['id']) }}
                     </div>
                 </div>
-                {{ create_modal(id="definition-rename-"+run['id'],
+                {{ create_modal(id="action-rename-"+run['id'],
                             header='Renaming ' + run.get('display_name', run['name']),
                             body='<textarea class="form-control textarea-modal" id="textarea-rename-%s" rows="1" style="resize: none;"></textarea>' % run['id'],
-                            footer=create_button(value="Save", classes="btn-danger", id="definition-rename-save-%s" % run['id'], data_dismiss="modal")) }}
-                {{ create_modal(id="definition-deletion-"+run['id'],
+                            footer=create_button(value="Save", classes="btn-danger", id="action-rename-save-%s" % run['id'], data_dismiss="modal")) }}
+                {{ create_modal(id="action-deletion-"+run['id'],
                             header='Deleting ' + run.get('display_name', run['name']),
                             body="Are you sure?",
-                            footer=create_button(value="Delete", classes="btn-danger", id="definition-rename-delete-%s" % run['id'], data_dismiss="modal")) }}
-                <div id="{{ run['id'] }}" class="definition-section" hidden>
+                            footer=create_button(value="Delete", classes="btn-danger", id="action-rename-delete-%s" % run['id'], data_dismiss="modal")) }}
+                <div id="{{ run['id'] }}" class="action-section" hidden>
 
-                    {% if 'fields' in definitions[run['name']].keys() %}
-                        {% with definition = definitions[run['name']]['fields'] %}
+                    {% if 'fields' in actions[run['name']].keys() %}
+                        {% with action = actions[run['name']]['fields'] %}
                             <div class="row mb-2 mt-2">
-                                {% for field in definition %}
+                                {% for field in action %}
                                     <div class="input-group col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">{{ camel_case(field[0], '_') }}</span>
                                         </div>
                                         <input
                                                 class="form-control param-btn"
-                                                aria-label="Set {{ field[0] }} value for definition {{ run['name'] }}"
+                                                aria-label="Set {{ field[0] }} value for action {{ run['name'] }}"
                                                 {% if len(field) > 1 %}value="{{ run['values'].get(field[0], field[1]) }}"{% endif %}
                                                 {% if len(field) > 2 %}type="{{ field[2] }}"{% endif %}
                                                 oninput="$.post('{{ url_for(name+'.save_value') }}', { uuid: '{{ run['id'] }}', key: '{{ field[0] }}', value: this.value})"
@@ -246,8 +246,8 @@
                             </div>
                         {% endwith %}
                     {% endif %}
-                    {% if 'groups' in definitions[run['name']].keys() %}
-                        {% with groups = definitions[run['name']]['groups'] %}
+                    {% if 'groups' in actions[run['name']].keys() %}
+                        {% with groups = actions[run['name']]['groups'] %}
                             <div class="input-group mb-2">
 
                                 {% for group in groups %}
@@ -267,7 +267,7 @@
                                                         <span class="input-group-text">{{ camel_case(field[0], '_') }}</span>
                                                     </div>
                                                     <input
-                                                            aria-label="Set {{ field[0] }} value for definition {{ run['name'] }}"
+                                                            aria-label="Set {{ field[0] }} value for action {{ run['name'] }}"
                                                             {% if group.get('area', 'local') == 'global' %}
                                                             {% if len(field) > 1 %}value="{{ current_rundown['global'].get(group['name'], {}).get(field[0], field[1]) }}"
                                                             {% endif %}
@@ -279,7 +279,7 @@
                                                             {% if group.get('area', 'local') == 'global' %}
                                                             class="form-control param-btn {{ group['name'] }}.{{ field[0] }}"
                                                             oninput="
-                                                                    $.post('{{ url_for(name+'.save_global_value') }}', { definition: '{{ run['name'] }}', key: '{{ field[0] }}', group: '{{ group['name'] }}', value: this.value});
+                                                                    $.post('{{ url_for(name+'.save_global_value') }}', { action: '{{ run['name'] }}', key: '{{ field[0] }}', group: '{{ group['name'] }}', value: this.value});
                                                                     elements = document.getElementsByClassName('{{ group['name'] }}.{{ field[0] }}');
                                                                     for (let i = 0; i < elements.length; i++) {
                                                                     elements[i].setAttribute('value', this.value);

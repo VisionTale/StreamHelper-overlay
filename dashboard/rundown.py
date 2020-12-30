@@ -70,10 +70,10 @@ def remove_rundown():
 @bp.route(f'{url_prefix}/save_value', methods=['GET', 'POST'])
 def save_value():
     """
-    Saves a value key pair for a definition.
+    Saves a value key pair for a action.
 
     Arguments:
-        - uuid, used to identify definition
+        - uuid, used to identify action
         - key
         - value (optional, uses empty string as fallback)
 
@@ -100,18 +100,18 @@ def save_value():
 @bp.route(f'{url_prefix}/save_global_value', methods=['GET', 'POST'])
 def save_global_value():
     """
-    Saves a value key pair for a definition.
+    Saves a value key pair for a action.
 
     Arguments:
-        - definition
+        - action
         - key
         - value (optional, uses empty string as fallback)
 
     :return: redirect or 200 response
     """
-    definition = param('definition')
-    if not is_set(definition):
-        return redirect_or_response(400, 'Missing parameter definition')
+    action = param('action')
+    if not is_set(action):
+        return redirect_or_response(400, 'Missing parameter action')
     key = param('key')
     if not is_set(key):
         return redirect_or_response(400, 'Missing parameter key')
@@ -131,16 +131,16 @@ def save_global_value():
 
 
 @bp.route(f'{url_prefix}/run', methods=['GET', 'POST'])
-def definition_exec():
+def action_exec():
     """
-    Execute a definition within a rundown. The definition will be executed based on the active services.
+    Execute a action within a rundown. The action will be executed based on the active services.
 
     The currently active rundown must not be empty.
 
     Arguments:
         - service [caspar,]
-        - action [start, stop,]
-        - uuid, used to identify definition. Must belong to current rundown.
+        - event, type of event [html, stop, clear,]
+        - uuid, used to identify action. Must belong to current rundown.
         - rundown, to read settings from. Falls back to current rundown if not set.
 
     :return: redirect or response
@@ -151,9 +151,9 @@ def definition_exec():
     uuid = param('uuid')
     if not is_set(uuid):
         return redirect_or_response(400, 'Missing parameter uuid')
-    action = param('action')
-    if not is_set(action):
-        return redirect_or_response(400, 'Missing parameter action')
+    event = param('event')
+    if not is_set(event):
+        return redirect_or_response(400, 'Missing parameter event')
     current_rundown = param('rundown') or get_current_rundown_name()
     if not is_set(current_rundown):
         return redirect_or_response(400, 'No rundown selected')
@@ -162,16 +162,16 @@ def definition_exec():
     for d in rundown:
         if d['id'] == uuid:
             if service.lower().startswith('caspar'):
-                return _definition_exec_caspar(action, d)
+                return _action_exec_caspar(event, d)
             else:
                 return redirect_or_response(400, 'Overlay service unknown')
-    return redirect_or_response(400, 'No valid definition found')
+    return redirect_or_response(400, 'No valid action found')
 
 
-def _definition_exec_caspar(action: str, definition: dict):
+def _action_exec_caspar(event: str, action: dict):
     rundown = get_current_rundown()
     groups = rundown.get('global', {})
-    values = {**definition['values']}
+    values = {**action['values']}
     for group in groups:
         values: dict = {**values, **groups[group]}
     values.setdefault('channel', 1)
@@ -181,27 +181,27 @@ def _definition_exec_caspar(action: str, definition: dict):
     values.setdefault('fadein', 1000)
     values.setdefault('fadeout', 1000)
 
-    values['type'] = 'definition'
+    values['type'] = 'action'
 
-    from .definitions import get_definitions
-    definitions = get_definitions()
-    values['filename'] = definitions[definition['name']]['filename']
-    for d in definitions:
-        for field in definitions[d].pop('fields', []):
+    from .actions import get_actions
+    actions = get_actions()
+    values['filename'] = actions[action['name']]['filename']
+    for d in actions:
+        for field in actions[d].pop('fields', []):
             if field[0] not in values:
                 values[field[0]] = str(field[1])
-        for group in definitions[d].pop('groups', {}):
+        for group in actions[d].pop('groups', {}):
             for field in group.get('fields', []):
                 if field[0] not in values:
                     values[field[0]] = str(field[1])
 
     from requests import get
-    if action == 'html':
+    if event == 'html':
         get(f"{request.url_root}/{url_for(name+'.caspar_play_html')}", params=values)
-    elif action == 'stop':
+    elif event == 'stop':
         values['javascript'] = 'fadeout()'
         get(f"{request.url_root}/{url_for(name+'.caspar_call')}", params=values)
-    elif action == 'clear':
+    elif event == 'clear':
         get(f"{request.url_root}/{url_for(name+'.caspar_clear')}", params=values)
     else:
         return redirect_or_response(400)
@@ -295,36 +295,36 @@ def get_current_rundown() -> dict:
     return rundowns[current_rundown] if current_rundown != '' else None
 
 
-def add_to_current_rundown(definition_name: str):
+def add_to_current_rundown(action_name: str):
     """
-    Add a definition to the current rundown.
+    Add a action to the current rundown.
 
-    :param definition_name: name of the definition
+    :param action_name: name of the action
     :exception AttributeError: If current rundown is not set.
     """
     current_rundown = get_current_rundown_name()
     if not is_set(current_rundown):
         raise AttributeError('No rundown selected')
 
-    from .definitions import get_definitions
-    definitions = get_definitions()
-    if definition_name not in definitions.keys():
-        raise AttributeError('Invalid definition selected')
+    from .actions import get_actions
+    actions = get_actions()
+    if action_name not in actions.keys():
+        raise AttributeError('Invalid action selected')
 
-    definition_container = {
-        'name': definition_name,
-        'display_name': camel_case(definition_name, '_'),
+    action_container = {
+        'name': action_name,
+        'display_name': camel_case(action_name, '_'),
         'id': str(uuid4()),
         'pos': 0,
         'values': {}
     }
-    if 'groups' in definitions.keys():
-        for group in definitions['groups']:
+    if 'groups' in actions.keys():
+        for group in actions['groups']:
             if group.get('area', 'local') == 'global':
                 if 'fields' in group.keys():
                     for field in group['fields']:
-                        definition_container[field[0]] = str(field[1])
-    rundowns[current_rundown]['rundown'].append(definition_container)
+                        action_container[field[0]] = str(field[1])
+    rundowns[current_rundown]['rundown'].append(action_container)
 
     _renumbering_current_rundown()
     _save_rundowns()
@@ -332,7 +332,7 @@ def add_to_current_rundown(definition_name: str):
 
 def remove_from_current_rundown(uuid: str):
     """
-    Remove a definition from the current rundown.
+    Remove a action from the current rundown.
 
     :param uuid: uuid saved in the rundown
     :exception AttributeError: If current rundown is not set.
@@ -352,7 +352,7 @@ def remove_from_current_rundown(uuid: str):
 
 def rename_in_current_rundown(uuid: str, new_name: str):
     """
-    Rename a definition in the current rundown.
+    Rename a action in the current rundown.
 
     :param uuid: uuid saved in the rundown
     :param new_name: new display name
