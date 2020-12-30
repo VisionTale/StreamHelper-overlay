@@ -113,10 +113,27 @@ def get_definitions_file() -> str:
 
     :return: full qualified filepath
     """
+    from os.path import join
     return config.get_or_set(name,
                              'definitions_file',
                              join(settings_folder, 'definitions.json')
                              )
+
+
+def create_empty_definitions_file():
+    """
+    Creates the file (and the corresponding folder) for the definitions.
+
+    :return:
+    """
+    from os.path import dirname, isdir, isfile
+    if not isdir(dirname(get_definitions_file())):
+        from pathlib import Path
+        Path(dirname(get_definitions_file())).mkdir(parents=True)
+    if not isfile(get_definitions_file()):
+        from json import dump
+        with open(get_definitions_file(), 'w') as f:
+            dump({}, f)
 
 
 def get_definitions() -> dict:
@@ -126,10 +143,11 @@ def get_definitions() -> dict:
     :return: dict of definitions
     """
     global definitions
+    from json.decoder import JSONDecodeError
     try:
         _load_definitions_file()
-    except SyntaxError as e:
-        flash("Syntax error: " + str(e))
+    except (SyntaxError, JSONDecodeError) as e:
+        flash("Syntax or decoding error: " + str(e))
         definitions = {}
     return definitions
 
