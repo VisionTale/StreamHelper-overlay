@@ -1,0 +1,73 @@
+{% macro create_button(value, classes="", id="", event="", href="", icon="", data_toggle="", data_target="", data_dismiss="", role="button") -%}
+    <a
+            class="{% if role == "button" %}btn{% endif %} {{ classes|safe }}"
+            {% if id != "" %}id="{{ id|safe }}"{% endif %}
+            role="{{ role }}"
+            {% if event != "" %}onmousedown="{{ event|safe }}"{% endif %}
+            {% if href != "" %}href="{{ href|safe }}"{% endif %}
+            {% if data_toggle != "" %}data-toggle="{{ data_toggle|safe }}"{% endif %}
+            {% if data_target != "" %}data-target="{{ data_target|safe }}"{% endif %}
+            {% if data_dismiss != "" %}data-dismiss="{{ data_dismiss|safe }}"{% endif %}
+    >
+        {% if icon != "" %}<i class="fas fa-{{ icon }}"></i>{% endif %} {{ value }}
+    </a>
+{%- endmacro %}
+
+{% macro toggle_element(id) -%}
+    element=document.getElementById('{{ id|safe }}');element.hidden=!element.hidden;
+{%- endmacro %}
+
+{% macro reload_settings_open() -%}
+    if (!location.href.includes("settings=open")) {
+    location.href += "?settings=open";
+    } else {
+    location.reload();
+    }
+{%- endmacro %}
+
+{% macro reload() -%}
+    location.reload();
+{%- endmacro %}
+
+{% macro get_element(id) -%}
+    const {{ camel_case(id|safe, '-') }} = document.getElementById("{{ id|safe }}");
+{%- endmacro %}
+
+{% macro get_elements(class) -%}
+    const {{ camel_case(class|safe, '-') }} = document.getElementsByClassName("{{ class|safe }}");
+{%- endmacro %}
+
+{% macro get_value(name, id) -%}
+    const {{ name|safe }} = document.getElementById("{{ id|safe }}").value;
+{%- endmacro %}
+
+{% macro start_event_listener(id, event="mousedown") -%}
+    {{ camel_case(id|safe, '-') }}.addEventListener('{{ event }}', (event) => {
+{%- endmacro %}
+
+{% macro end_event_listener() -%}
+    });
+{%- endmacro %}
+
+{% macro create_modal(id, header, body, footer) %}
+    <div class="modal fade" id="{{ id|safe }}" tabindex="-1" role="dialog"
+         aria-labelledby="{{ id|safe }}-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="{{ id|safe }}-label">{{ header|safe }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    {{ body|safe }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" data-dismiss="modal">Cancel</button>
+                    {{ footer|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+{%- endmacro %}
