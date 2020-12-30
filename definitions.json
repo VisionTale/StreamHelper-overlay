@@ -2,41 +2,57 @@
     "lower_third": {
         "filename": "lower_third.html",
         "fields": [
-            ["title", "", "str", "string"],
-            ["subtitle", "", "str", "string"],
-            ["fadein", 1000, "int", "integer"],
-            ["hold", 6000, "int", "integer"],
-            ["fadeout", 1000, "int", "integer"],
-            ["title_color", "#242582", "str", "color"],
-            ["subtitle_color", "#2F2FA2", "str", "color"],
-            ["title_text_color", "#FFFFFF", "str", "color"],
-            ["subtitle_text_color", "#FFFFFF", "str", "color"]
+            ["title", "", "text"],
+            ["subtitle", "", "text"]
+        ],
+        "groups": [
+            {
+                "name": "global",
+                "display_name": "Global",
+                "area": "global",
+                "fields": [
+                    ["fadein", "1000", "number"],
+                    ["hold", "6000", "number"],
+                    ["fadeout", "1000", "number"]
+                ]
+            },
+            {
+                "name": "coloring",
+                "display_name": "Coloring",
+                "area": "global",
+                "fields": [
+                    ["title_color", "#242582", "color"],
+                    ["subtitle_color", "#2F2FA2", "color"],
+                    ["title_text_color", "#FFFFFF", "color"],
+                    ["subtitle_text_color", "#FFFFFF", "color"]
+                ]
+            }
         ]
     },
     "social_media": {
         "filename": "social_media.html",
         "fields": [
-            ["message", "", "str", "string"],
-            ["tag", "", "str", "string"],
-            ["fadein", 1000, "int", "integer"],
-            ["hold", 6000, "int", "integer"],
-            ["fadeout", 1000, "int", "integer"],
-            ["message_color", "#242582", "str", "color"],
-            ["tag_color", "#2F2FA2", "str", "color"],
-            ["message_text_color", "#FFFFFF", "str", "color"],
-            ["tag_text_color", "#FFFFFF", "str", "color"]
+            ["message", "", "text"],
+            ["tag", "", "text"],
+            ["fadein", "1000", "number"],
+            ["hold", "6000", "number"],
+            ["fadeout", "1000", "number1000"],
+            ["message_color", "#242582", "color"],
+            ["tag_color", "#2F2FA2", "color"],
+            ["message_text_color", "#FFFFFF", "color"],
+            ["tag_text_color", "#FFFFFF", "color"]
         ]
     },
     "centered_title": {
         "filename": "centered_title.html",
         "fields": [
-            ["title", "", "str", "string"],
-            ["fadein", 1000, "int", "integer"],
-            ["hold", 6000, "int", "integer"],
-            ["fadeout", 1000, "int", "integer"],
-            ["title_size", "42px", "str", "string"],
-            ["title_color", "#242582", "str", "color"],
-            ["title_text_color", "#FFFFFF", "str", "color"]
+            ["title", "", "text"],
+            ["fadein", "1000", "number"],
+            ["hold", "6000", "number"],
+            ["fadeout", "1000", "number"],
+            ["title_size", "42px", "text"],
+            ["title_color", "#242582", "color"],
+            ["title_text_color", "#FFFFFF", "color"]
         ]
     }
 }
