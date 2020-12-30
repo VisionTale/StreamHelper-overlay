@@ -133,76 +133,51 @@ def save_global_value():
 @bp.route(f'{url_prefix}/run', methods=['GET', 'POST'])
 def action_exec():
     """
-    Execute a action within a rundown. The action will be executed based on the active services.
+    Execute a action within a rundown.
 
     The currently active rundown must not be empty.
 
     Arguments:
         - service [caspar,]
         - event, type of event [html, stop, clear,]
-        - uuid, used to identify action. Must belong to current rundown.
-        - rundown, to read settings from. Falls back to current rundown if not set.
+        - rundown, name of rundown
+        - action, unique id of action
 
     :return: redirect or response
     """
     service = param('service')
     if not is_set(service):
         return redirect_or_response(400, 'Missing parameter service')
-    uuid = param('uuid')
-    if not is_set(uuid):
-        return redirect_or_response(400, 'Missing parameter uuid')
     event = param('event')
     if not is_set(event):
         return redirect_or_response(400, 'Missing parameter event')
-    current_rundown = param('rundown') or get_current_rundown_name()
-    if not is_set(current_rundown):
-        return redirect_or_response(400, 'No rundown selected')
-    rundown = rundowns[current_rundown]['rundown']
+    rundown = param('rundown')
+    if not is_set(rundown):
+        return redirect_or_response(400, 'Missing parameter rundown')
+    action = param('action')
+    if not is_set(action):
+        return redirect_or_response(400, 'Missing parameter action')
 
-    for d in rundown:
-        if d['id'] == uuid:
-            if service.lower().startswith('caspar'):
-                return _action_exec_caspar(event, d)
-            else:
-                return redirect_or_response(400, 'Overlay service unknown')
-    return redirect_or_response(400, 'No valid action found')
+    if service.lower().startswith('caspar'):
+        return _action_exec_caspar(event, rundown, action)
+    else:
+        return redirect_or_response(400, 'Overlay service unknown')
 
 
-def _action_exec_caspar(event: str, action: dict):
-    rundown = get_current_rundown()
-    groups = rundown.get('global', {})
-    values = {**action['values']}
-    for group in groups:
-        values: dict = {**values, **groups[group]}
-    values.setdefault('channel', 1)
-    values.setdefault('layer', 7)
-    values.setdefault('transition', 'MIX')
-    values.setdefault('hold', 0)
-    values.setdefault('fadein', 1000)
-    values.setdefault('fadeout', 1000)
-
-    values['type'] = 'action'
-
-    from .actions import get_actions
-    actions = get_actions()
-    values['filename'] = actions[action['name']]['filename']
-    for d in actions:
-        for field in actions[d].pop('fields', []):
-            if field[0] not in values:
-                values[field[0]] = str(field[1])
-        for group in actions[d].pop('groups', {}):
-            for field in group.get('fields', []):
-                if field[0] not in values:
-                    values[field[0]] = str(field[1])
-
+def _action_exec_caspar(event: str, rundown: str, action: str):
     from requests import get
+    # TODO Variable setting
+    channel = "1"
+    layer = "7"
+    additional = ""
     if event == 'html':
-        get(f"{request.url_root}/{url_for(name+'.caspar_play_html')}", params=values)
+        get(f"{request.url_root}/{url_for(name+'.caspar_play_html')}",
+            params={"rundown": rundown, "action": action, "channel": channel, "layer": layer, "additional": additional})
     elif event == 'stop':
-        values['javascript'] = 'fadeout()'
-        get(f"{request.url_root}/{url_for(name+'.caspar_call')}", params=values)
+        get(f"{request.url_root}/{url_for(name+'.caspar_call')}",
+            params={"rundown": rundown, "action": action, "function": "fadeout"})
     elif event == 'clear':
-        get(f"{request.url_root}/{url_for(name+'.caspar_clear')}", params=values)
+        get(f"{request.url_root}/{url_for(name+'.caspar_clear')}", params={"rundown": rundown, "action": action})
     else:
         return redirect_or_response(400)
 

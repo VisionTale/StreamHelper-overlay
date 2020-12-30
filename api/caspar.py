@@ -16,27 +16,38 @@ caspar_prefix: str = f'{api_prefix}/caspar'
 
 @bp.route(f'{caspar_prefix}/play_html', methods=['GET', 'POST'])
 def caspar_play_html():
-    form = request.args.to_dict() or request.form.to_dict()
-    channel = form.pop('channel')
+    """
+    Call CasparCG server to play a html site from this server.
+
+    Arguments:
+        - rundown, name of the rundown
+        - action, uuid of the action that stores all values
+        - channel, casparcg channel
+        - layer, casparcg layer
+        - additional, additional arguments to casparcg (defaults to be empty)
+
+    :return: http response code
+    """
+
+    rundown = param('rundown')
+    if not is_set(rundown):
+        return redirect_or_response(400, 'Missing parameter rundown')
+    action = param('action')
+    if not is_set(action):
+        return redirect_or_response(400, 'Missing parameter action')
+    channel = param('channel')
     if not is_set(channel):
         return redirect_or_response(400, 'Missing parameter channel')
-    layer = form.pop('layer')
+    layer = param('layer')
     if not is_set(layer):
         return redirect_or_response(400, 'Missing parameter layer')
-    display_type = form.pop('type')
-    if not is_set(display_type):
-        return redirect_or_response(400, 'Missing parameter type')
+    additional = param('additional', "")
 
     overlay_server = _get_overlay_server()
+    recall_url = f'{overlay_server}{url_for(f"{name}.show_action")}?rundown={rundown}&action={action}'
 
-    stack = inverse_stack(form, 'popitem')
-    params = "&".join("%s=%s" % (quote(k.strip()), quote(v.strip())) for k, v in stack)
+    command = f'PLAY {channel}-{layer} [HTML] "{recall_url}" {additional}'
 
-    if display_type == 'action':
-        command = f'PLAY {channel}-{layer} [HTML] "{overlay_server}{url_for(f"{name}.show_action")}?{params}"'
-    else:
-        return response(400, "No valid display_type argument")
-    
     server, port = _get_server_and_port()
 
     http_response_code = _execute_command(server, port, command)
@@ -51,9 +62,9 @@ def caspar_call():
     layer = param('layer')
     if not is_set(layer):
         return redirect_or_response(400, 'Missing parameter layer')
-    javascript = param('javascript')
+    javascript = param('function')
     if not is_set(javascript):
-        return redirect_or_response(400, 'Missing parameter javascript')
+        return redirect_or_response(400, 'Missing parameter function')
 
     command = f'CALL {channel}-{layer} {javascript}'
 

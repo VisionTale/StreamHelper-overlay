@@ -7,7 +7,8 @@ from webapi.libs.text import camel_case
 
 from .. import bp, config, name, logger, settings_folder
 from ..libs.actions_schema import actions_schema
-from .rundown import add_to_current_rundown, remove_from_current_rundown, rename_in_current_rundown
+from .rundown import add_to_current_rundown, remove_from_current_rundown, rename_in_current_rundown, get_rundowns, \
+    get_current_rundown_name
 
 url_prefix: str = '/actions'
 actions: dict = {}
@@ -89,22 +90,55 @@ def show_action():
     """
     Rendered template file.
 
-    All arguments except of the filename argumeent are passed to the file.
+    All arguments are also passed to the file.
 
     Arguments:
         - filename
+        - rundown, name of the rundown
+        - action, uuid of the action that stores all values
 
     :return: rendered file
     """
-    values: dict = request.args.to_dict() or request.form.to_dict()
-    action = values.pop('filename', '')
-    if not is_set(action):
-        return response(400, 'Missing parameter filename', graphical=True)
-    from os.path import isfile, join
-    if not isfile(join(bp.template_folder, 'overlays', action)):
-        return response(404, 'Action file not found', graphical=True)
 
-    return render_template(f'overlays/{action}', **values)
+    rundown_name = param('rundown', get_current_rundown_name())
+    if not is_set(rundown_name):
+        return redirect_or_response(400, 'Missing parameter rundown')
+    if rundown_name not in get_rundowns():
+        return redirect_or_response(400, 'Rundown name unknown')
+    rundown = get_rundowns()[rundown_name]
+
+    action_uuid = param('action')
+    if not is_set(action_uuid):
+        return redirect_or_response(400, 'Missing parameter action')
+    action: dict = None
+
+    for e in rundown['rundown']:
+        if e['id'] == action_uuid:
+            action = e
+    if not action:
+        return redirect_or_response(400, "Actions uuid unknown")
+
+    values: dict = request.args.to_dict() or request.form.to_dict()
+    for group in rundown['global']:
+        values = {**values, **rundown['global'][group]}
+
+    values = {**values, **action['values']}
+
+    for field in get_actions()[action['name']]['fields']:
+        if field[0] not in values:
+            values[field[0]] = field[1]
+    for group in get_actions()[action['name']]['groups']:
+        for field in group['fields']:
+            if field[0] not in values:
+                values[field[0]] = field[1]
+
+    from os.path import isfile, join
+    filename: str = get_actions()[action['name']]['filename']
+
+    if not isfile(join(bp.template_folder, 'overlays', filename)):
+        return response(404, 'Action template file not found', graphical=True)
+
+    return render_template(f'overlays/{filename}', **values)
 
 
 @bp.route(f'{url_prefix}/reload', methods=['GET'])
@@ -156,10 +190,6 @@ def _load_actions_file():
         from json import load
         content: dict = load(f)
 
-    logger.debug("Validation of json started")
-    from pprint import pprint
-    pprint(content)
-    pprint(actions_schema)
     validate(instance=content, schema=actions_schema)
 
     for file_def in content:
