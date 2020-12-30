@@ -1,1 +1,2 @@
 amcp-pylib
+jsonschema

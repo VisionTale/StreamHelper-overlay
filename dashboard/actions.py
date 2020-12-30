@@ -1,10 +1,12 @@
 from flask import request, flash, render_template
+from jsonschema import validate
 
 from webapi.libs.api.response import redirect_or_response
 from webapi.libs.api.parsing import param, is_set
 from webapi.libs.text import camel_case
 
 from .. import bp, config, name, logger, settings_folder
+from ..libs.actions_schema import actions_schema
 from .rundown import add_to_current_rundown, remove_from_current_rundown, rename_in_current_rundown
 
 url_prefix: str = '/actions'
@@ -113,10 +115,11 @@ def reload_actions():
     :return: redirect or response
     """
     from json.decoder import JSONDecodeError
+    from jsonschema import ValidationError
     try:
         _load_actions_file()
         return redirect_or_response(200)
-    except (SyntaxError, JSONDecodeError) as e:
+    except (ValidationError, JSONDecodeError) as e:
         return redirect_or_response(400, e.msg)
 
 
@@ -144,7 +147,7 @@ def _load_actions_file():
     """
     Load the actions file.
 
-    :exception SyntaxError: If validation check fails
+    :exception jsonschema.ValidationError: If validation check fails
     :exception json.decoder.JSONDecodeError: If json.load fails
     """
     actions.clear()
@@ -152,25 +155,14 @@ def _load_actions_file():
     with open(get_actions_file(), 'r') as f:
         from json import load
         content: dict = load(f)
-    if not type(content) == dict:
-        raise SyntaxError('Content is not a json object')
-    for file_def in content:
-        if not type(content[file_def]) == dict:
-            raise SyntaxError(f'Content of {file_def} is not a valid json array')
-        if 'filename' not in content[file_def].keys() or type(content[file_def]['filename']) != str:
-            raise SyntaxError(f'Content of {file_def} misses the filename attribute')
-        if 'fields' in content[file_def].keys():
-            if type(content[file_def]['fields']) != list:
-                raise SyntaxError(f'Content of {file_def} has fields attribute but is no list')
-        if 'groups' in content[file_def].keys():
-            if type(content[file_def]['fields']) != list:
-                raise SyntaxError(f'Content of {file_def} has groups attribute but is no list')
-            for group in content[file_def]['groups']:
-                if type(group) != dict:
-                    raise SyntaxError(f'Content of {file_def} has a group which is no dictionary (json object)')
-                if 'name' not in group.keys():
-                    raise SyntaxError(f'Content of {file_def} has a group which has no name attribute')
 
+    logger.debug("Validation of json started")
+    from pprint import pprint
+    pprint(content)
+    pprint(actions_schema)
+    validate(instance=content, schema=actions_schema)
+
+    for file_def in content:
         if 'display_name' not in content[file_def].keys():
             content[file_def]['display_name'] = camel_case(file_def, '_')
         actions[file_def] = content[file_def]
@@ -213,9 +205,10 @@ def get_actions() -> dict:
     """
     global actions
     from json.decoder import JSONDecodeError
+    from jsonschema import ValidationError
     try:
         _load_actions_file()
-    except (SyntaxError, JSONDecodeError) as e:
+    except (ValidationError, JSONDecodeError) as e:
         flash("Syntax or decoding error: " + str(e))
         actions = {}
     return actions
