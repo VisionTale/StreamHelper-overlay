@@ -350,6 +350,27 @@ def remove_from_current_rundown(uuid: str):
     _save_rundowns()
 
 
+def rename_in_current_rundown(uuid: str, new_name: str):
+    """
+    Rename a definition in the current rundown.
+
+    :param uuid: uuid saved in the rundown
+    :param new_name: new display name
+    :exception AttributeError: If current rundown is not set.
+    """
+    current_rundown = get_current_rundown_name()
+    if not is_set(current_rundown):
+        raise AttributeError('No rundown selected')
+
+    rundown = rundowns[current_rundown]['rundown']
+    for i in range(len(rundown)):
+        if rundown[i]['id'] == uuid:
+            rundown[i]['display_name'] = new_name
+            break
+
+    _save_rundowns()
+
+
 def _renumbering_current_rundown():
     """
     Set the position attribute of all rundowns based on their position in the rundown list. Used for sorting after

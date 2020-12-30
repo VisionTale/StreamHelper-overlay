@@ -1,12 +1,11 @@
 from flask import request, flash, render_template
-from os.path import join
 
 from webapi.libs.api.response import redirect_or_response
 from webapi.libs.api.parsing import param, is_set
 from webapi.libs.text import camel_case
 
 from .. import bp, config, name, logger, settings_folder
-from .rundown import add_to_current_rundown, remove_from_current_rundown
+from .rundown import add_to_current_rundown, remove_from_current_rundown, rename_in_current_rundown
 
 url_prefix: str = '/definitions'
 definitions: dict = {}
@@ -45,53 +44,113 @@ def remove_definition():
 
     :return: redirect or response
     """
-    param('uuid')
+    uuid = param('uuid')
     if not is_set(uuid):
         return redirect_or_response(400, 'Missing parameter uuid')
 
-    remove_from_current_rundown(uuid)
+    try:
+        remove_from_current_rundown(uuid)
+    except AttributeError as e:
+        return redirect_or_response(400, e.msg)
+
+    return redirect_or_response(200, 'Success')
+
+
+@bp.route(f'{url_prefix}/rename', methods=['GET', 'POST'])
+def rename_definition():
+    """
+    Rename a definition from the current rundown based on it's uuid.
+
+    Arguments:
+        - uuid
+        - name
+
+    :return: redirect or response
+    """
+    uuid = param('uuid')
+    if not is_set(uuid):
+        return redirect_or_response(400, 'Missing parameter uuid')
+    display_name = param('name')
+    if not is_set(display_name):
+        return redirect_or_response(400, 'Missing parameter name')
+
+    try:
+        rename_in_current_rundown(uuid, display_name)
+    except AttributeError as e:
+        return redirect_or_response(400, e.msg)
+
     return redirect_or_response(200, 'Success')
 
 
 @bp.route(f'{url_prefix}/show', methods=['GET', 'POST'])
 def show_definition():
-    values = request.args.to_dict() or request.form.to_dict()
-    definition = param('filename')
+    """
+    Rendered template file.
+
+    All arguments except of the filename argumeent are passed to the file.
+
+    Arguments:
+        - filename
+
+    :return: rendered file
+    """
+    values: dict = request.args.to_dict() or request.form.to_dict()
+    definition = values.pop('filename', '')
     if not is_set(definition):
-        return redirect_or_response(400, 'Missing parameter filename')
+        return response(400, 'Missing parameter filename', graphical=True)
+    from os.path import isfile, join
+    if not isfile(join(bp.template_folder, 'overlays', definition)):
+        return response(404, 'Definition file not found', graphical=True)
 
     return render_template(f'overlays/{definition}', **values)
 
 
 @bp.route(f'{url_prefix}/reload', methods=['GET'])
 def reload_definitions():
+    """
+    Reload definitions file.
+
+    :return: redirect or response
+    """
+    from json.decoder import JSONDecodeError
     try:
         _load_definitions_file()
         return redirect_or_response(200)
-    except SyntaxError as e:
+    except (SyntaxError, JSONDecodeError) as e:
         return redirect_or_response(400, e.msg)
 
 
 @bp.route(f'{url_prefix}/save_content', methods=['POST'])
-def save_definitions_content():
+def save_definitions_file_content():
+    """
+    Save file content of definitions.json.
+
+    Arguments:
+        - content, encoded file content
+
+    :return: redirect or response
+    """
     from urllib.parse import unquote
     content = unquote(request.form.get('content'))
+
+    create_empty_definitions_file()
     with open(get_definitions_file(), 'w') as f:
         f.write(content)
+
     return redirect_or_response(200)
 
 
-def create_kwargs(definition_name: str, r: request) -> dict:
-    kwargs = dict()
-    for d in getattr(definitions, definition_name):
-        kwargs[d[0]] = r.args.get(d[0], d[1], d[2])
-    return kwargs
-
-
 def _load_definitions_file():
+    """
+    Load the definitions file.
+
+    :exception SyntaxError: If validation check fails
+    :exception json.decoder.JSONDecodeError: If json.load fails
+    """
     definitions.clear()
-    from json import load
+    create_empty_definitions_file()
     with open(get_definitions_file(), 'r') as f:
+        from json import load
         content: dict = load(f)
     if not type(content) == dict:
         raise SyntaxError('Content is not a json object')
@@ -100,8 +159,18 @@ def _load_definitions_file():
             raise SyntaxError(f'Content of {file_def} is not a valid json array')
         if 'filename' not in content[file_def].keys() or type(content[file_def]['filename']) != str:
             raise SyntaxError(f'Content of {file_def} misses the filename attribute')
-        if 'fields' not in content[file_def].keys() or type(content[file_def]['fields']) != list:
-            raise SyntaxError(f'Content of {file_def} misses the fields attribute')
+        if 'fields' in content[file_def].keys():
+            if type(content[file_def]['fields']) != list:
+                raise SyntaxError(f'Content of {file_def} has fields attribute but is no list')
+        if 'groups' in content[file_def].keys():
+            if type(content[file_def]['fields']) != list:
+                raise SyntaxError(f'Content of {file_def} has groups attribute but is no list')
+            for group in content[file_def]['groups']:
+                if type(group) != dict:
+                    raise SyntaxError(f'Content of {file_def} has a group which is no dictionary (json object)')
+                if 'name' not in group.keys():
+                    raise SyntaxError(f'Content of {file_def} has a group which has no name attribute')
+
         if 'display_name' not in content[file_def].keys():
             content[file_def]['display_name'] = camel_case(file_def, '_')
         definitions[file_def] = content[file_def]
