@@ -45,11 +45,11 @@
         }, false);
 
         function saveContent(backToDashboard=false) {
-            $.post("{{ url_for(name+'.save_definitions_content') }}", {
+            $.post("{{ url_for(name+'.save_definitions_file_content') }}", {
                 content: editor.getValue()
             }).done(() => {
                 if (backToDashboard) {
-                    document.location.href = "{{ url_for(name+'.dashboard') }}";
+                    document.location.href = "{{ url_for(name+'.dashboard') }}?settings=open";
                 }
             })
         }

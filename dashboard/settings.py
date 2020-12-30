@@ -10,25 +10,17 @@ from webapi.libs.api.parsing import param, is_set
 settings_prefix: str = "/settings"
 
 
-@bp.route(f'{settings_prefix}/activate_caspar')
-def activate_caspar():
+@bp.route(f'{settings_prefix}/toggle_caspar', methods=['GET', 'POST'])
+def toggle_caspar():
     """
-    Activates caspar (only affects interface).
+    Toggles caspar activation (only affects interface).
 
     :return: redirect or response
     """
-    config.set(name, 'use_caspar', 'true')
-    return redirect_or_response(200, 'Success')
+    from distutils.dist import strtobool
+    state: bool = bool(strtobool(config.get(name, 'use_caspar'))) ^ True
+    config.set(name, 'use_caspar', str(state).lower())
 
-
-@bp.route(f'{settings_prefix}/deactivate_caspar')
-def deactivate_caspar():
-    """
-    Deactivates caspar (only affects interface).
-
-    :return: redirect or response
-    """
-    config.set(name, 'use_caspar', 'false')
     return redirect_or_response(200, 'Success')
 
 
@@ -49,7 +41,7 @@ def set_caspar_server_url():
     return redirect_or_response(200, 'Success')
 
 
-@bp.route(f'{settings_prefix}/set_overlay_server_url')
+@bp.route(f'{settings_prefix}/set_overlay_server_url', methods=['GET', 'POST'])
 def set_overlay_server_url():
     """
     Set the url the remote server is supposed to call back. This is mainly intended to use the interface via a different
@@ -68,7 +60,7 @@ def set_overlay_server_url():
     return redirect_or_response(200, 'Success')
 
 
-@bp.route(f'{settings_prefix}/set_current_rundown')
+@bp.route(f'{settings_prefix}/set_current_rundown', methods=['GET', 'POST'])
 def set_current_rundown():
     """
     Set the current rundown.

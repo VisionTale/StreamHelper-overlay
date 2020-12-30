@@ -24,7 +24,7 @@ def dashboard():
                            caspar_server_url=config.get_or_set(name, 'caspar_server',
                                                                request.url_root.split('/')[2].split(':')[0] + ':5250'),
                            overlay_server_url=config.get_or_set(name, 'overlay_server',
-                                                                request.base_url.rstrip(name + '/dashboard')),
+                                                                request.base_url.rstrip(name + f'/{name}/dashboard')),
                            current_rundown_name=rundown.get_current_rundown_name(),
                            current_rundown=rundown.get_current_rundown(),
                            rundowns=rundown.get_rundowns(),
