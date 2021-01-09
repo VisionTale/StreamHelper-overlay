@@ -26,6 +26,34 @@ fields_schema = {
     "uniqueItems": True
 }
 
+extended_fields_schema = {
+    "type": "array",
+    "items": {
+        "type": "array",
+        "items": [
+            {
+                "type": "string"
+            },
+            {
+                "type": "string"
+            },
+            {
+                "type": "string",
+                "enum": ["button", "checkbox", "color", "date", "datetime-local", "email", "file", "hidden",
+                         "image", "month", "number", "password", "radio", "range", "reset", "search",
+                         "submit", "tel", "text", "time", "url", "week"]
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "additionalItems": False,
+        "minItems": 3,
+        "maxItems": 4
+    },
+    "uniqueItems": True
+}
+
 actions_schema = {
     "$schema": "http://json-schema.org/draft/2019-09/schema#",
     "type": "object",
@@ -48,6 +76,19 @@ actions_schema = {
                     "additionalProperties": False
                 }
             },
+            "updates": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "display_name": {"type": "string"},
+                        "function": {"type": "string"},
+                        "fields": extended_fields_schema
+                    },
+                    "required": ["function"],
+                    "additionalProperties": False
+                }
+            }
         },
         "required": ["filename"],
         "additionalProperties": False

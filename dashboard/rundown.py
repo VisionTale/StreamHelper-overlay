@@ -105,6 +105,7 @@ def save_global_value():
     Arguments:
         - action
         - key
+        - group
         - value (optional, uses empty string as fallback)
 
     :return: redirect or 200 response
@@ -124,6 +125,44 @@ def save_global_value():
     if group not in current_rundown['global']:
         current_rundown['global'][group] = dict()
     current_rundown['global'][group][key] = value
+
+    _save_rundowns()
+
+    return redirect_or_response(200, 'Success')
+
+
+@bp.route(f'{url_prefix}/save_update_value', methods=['GET', 'POST'])
+def save_update_value():
+    """
+    Saves a value key pair for a action.
+
+    Arguments:
+        - uuid, used to identify action
+        - func, update function
+        - key
+        - value (optional, uses empty string as fallback)
+
+    :return: redirect or 200 response
+    """
+    uuid = param('uuid')
+    if not is_set(uuid):
+        return redirect_or_response(400, 'Missing parameter uuid')
+    func = param('func')
+    if not is_set(func):
+        return redirect_or_response(400, 'Missing parameter func')
+    key = param('key')
+    if not is_set(key):
+        return redirect_or_response(400, 'Missing parameter key')
+    value = param('value', '')
+
+    current_rundown = get_current_rundown()
+    for run in current_rundown['rundown']:
+        if run['id'] == uuid:
+            if 'updates' not in run:
+                run['updates'] = dict()
+            if func not in run['updates']:
+                run['updates'][func] = dict()
+            run['updates'][func][key] = value
 
     _save_rundowns()
 
@@ -175,11 +214,17 @@ def _action_exec_caspar(event: str, rundown: str, action: str):
             params={"rundown": rundown, "action": action, "channel": channel, "layer": layer, "additional": additional})
     elif event == 'stop':
         get(f"{request.url_root}/{url_for(name+'.caspar_call')}",
-            params={"rundown": rundown, "action": action, "function": "fadeout"})
+            params={"rundown": rundown, "action": action, "channel": channel, "layer": layer, "function": "fadeout"})
     elif event == 'clear':
         get(f"{request.url_root}/{url_for(name+'.caspar_clear')}", params={"rundown": rundown, "action": action})
+    elif event == 'update':
+        func = param('func')
+        if not is_set(func):
+            return redirect_or_response(400, 'Missing parameter func for event "update"')
+        get(f"{request.url_root}/{url_for(name + '.caspar_call')}",
+            params={"rundown": rundown, "action": action, "channel": channel, "layer": layer, "function": func})
     else:
-        return redirect_or_response(400)
+        return redirect_or_response(400, 'No valid event')
 
     return redirect_or_response(200, 'Success')
 

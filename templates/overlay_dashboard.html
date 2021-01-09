@@ -33,32 +33,32 @@
         }
 
         const ids = document.querySelectorAll('[id]');
-        Array.prototype.forEach.call( ids, function( el, i ) {
+        Array.prototype.forEach.call(ids, function (el, i) {
             window[camelize(el.id)] = el
         });
 
         {{ start_event_listener('overlay-server-url', event='keydown') }}
-         if (event.key === "Enter") {
-                OverlayServerUrl.blur()
-            }
+        if (event.key === "Enter") {
+            OverlayServerUrl.blur()
+        }
         {{ end_event_listener() }}
 
-        if (typeof(CasparServerUrl) !== 'undefined') {
+        if (typeof (CasparServerUrl) !== 'undefined') {
             {{ start_event_listener('caspar-server-url', event='keydown') }}
-                if (event.key === "Enter") {
-                    CasparServerUrl.blur()
-                }
+            if (event.key === "Enter") {
+                CasparServerUrl.blur()
+            }
             {{ end_event_listener() }}
         }
 
         {{ start_event_listener('rundown-add', event='keydown') }}
-            if (event.key === "Enter") {
-                RundownAddBtn.click();
-            }
+        if (event.key === "Enter") {
+            RundownAddBtn.click();
+        }
         {{ end_event_listener() }}
 
         {{ start_event_listener('rundown-add-btn') }}
-            {{ post('add_rundown', data="{display_name: RundownAdd.value,name: RundownAdd.value.replace(' ', '_').toLowerCase()}", after=reload_settings_open()) }}
+        {{ post('add_rundown', data="{display_name: RundownAdd.value,name: RundownAdd.value.replace(' ', '_').toLowerCase()}", after=reload_settings_open()) }}
         {{ end_event_listener() }}
 
         const paramBtns = document.getElementsByClassName('param-btn');
@@ -71,42 +71,42 @@
         }
 
         {{ start_event_listener('settings-btn') }}
-            {{ toggle_element('settings') }}
-            if (location.href.includes("settings=open")) {
-                location.href = location.origin + location.pathname;
-            }
+        {{ toggle_element('settings') }}
+        if (location.href.includes("settings=open")) {
+            location.href = location.origin + location.pathname;
+        }
         {{ end_event_listener() }}
 
         {{ start_event_listener('rundown-deletion') }}
-            {{ post(url='remove_rundown', data='{ name: RundownSelect.value }', after=reload_settings_open()) }}
+        {{ post(url='remove_rundown', data='{ name: RundownSelect.value }', after=reload_settings_open()) }}
         {{ end_event_listener() }}
 
         {{ start_event_listener('caspar-toggle') }}
-            {{ post('toggle_caspar', after=reload_settings_open()) }}
+        {{ post('toggle_caspar', after=reload_settings_open()) }}
         {{ end_event_listener() }}
 
         {% if current_rundown %}
             {{ start_event_listener('action-add-btn') }}
-                {{ post('add_action', data='{ name: ActionAdd.value }', after=reload()) }}
+            {{ post('add_action', data='{ name: ActionAdd.value }', after=reload()) }}
             {{ end_event_listener() }}
         {% endif %}
 
         {{ start_event_listener('rundown-select', event='change') }}
-            {{ post('set_current_rundown', data="{ name: RundownSelect.value }", after=reload_settings_open()) }}
+        {{ post('set_current_rundown', data="{ name: RundownSelect.value }", after=reload_settings_open()) }}
         {{ end_event_listener() }}
 
         {{ start_event_listener('overlay-server-url', event='input') }}
-            {{ post('set_overlay_server_url', data="{ url: OverlayServerUrl.value }") }}
+        {{ post('set_overlay_server_url', data="{ url: OverlayServerUrl.value }") }}
         {{ end_event_listener() }}
 
         {% for pos, run in enumerate(current_rundown['rundown']) %}
             {% if run['name'] in actions %}
                 {{ start_event_listener('action-rename-save-%s' % run['id']) }}
-                    {{ get_value('name', 'textarea-rename-'+run['id']) }}
-                    {{ post(url='rename_action', data='{uuid: \'%s\', name: name}' % run['id'], after=reload()) }}
+                {{ get_value('name', 'textarea-rename-'+run['id']) }}
+                {{ post(url='rename_action', data='{uuid: \'%s\', name: name}' % run['id'], after=reload()) }}
                 {{ end_event_listener() }}
                 {{ start_event_listener('action-rename-delete-%s' % run['id']) }}
-                    {{ post(url='remove_action', data='{uuid: "%s"}' % run['id'], after=reload()) }}
+                {{ post(url='remove_action', data='{uuid: "%s"}' % run['id'], after=reload()) }}
                 {{ end_event_listener() }}
             {% endif %}
         {% endfor %}
@@ -156,9 +156,11 @@
 
         <div class="input-group mb-2">
             <div class="input-group-prepend">
-                <span class="input-group-text" id="overlay-server-url-desc">Overlay Server (protocol://domain:port/)</span>
+                <span class="input-group-text"
+                      id="overlay-server-url-desc">Overlay Server (protocol://domain:port/)</span>
             </div>
-            <input type="text" value="{{ overlay_server_url }}" class="form-control" id="overlay-server-url" aria-describedby="overlay-server-url-desc" aria-label="Set Overlay Server URL">
+            <input type="text" value="{{ overlay_server_url }}" class="form-control" id="overlay-server-url"
+                   aria-describedby="overlay-server-url-desc" aria-label="Set Overlay Server URL">
         </div>
         <div class="mb-2">
             {{ create_button('Edit Actions', href=url_for(name+'.edit_actions')) }}
@@ -169,7 +171,7 @@
             </div>
             <div class="input-group mb-2">
                 <div class="input-group-prepend">
-                            <span class="input-group-text" id="caspar-server-url-desc">CasparCG Server (domain:port)</span>
+                    <span class="input-group-text" id="caspar-server-url-desc">CasparCG Server (domain:port)</span>
                 </div>
                 <input
                         type="text" value="{{ caspar_server_url }}"
@@ -185,126 +187,167 @@
 {% endblock %}
 
 {% block rundown %}
-    <div class="input-group mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Add Action</span>
-        </div>
-        <select class="custom-select" id="action-add" aria-label="Add action to current rundown">
-            <option selected>Choose...</option>
-            {% for action in actions %}
-                <option value="{{ action }}">{{ actions[action].get('display_name', action) }}</option>
-            {% endfor %}
-        </select>
-        <div class="input-group-append">
-            {{ create_button("", icon="plus", id="action-add-btn") }}
-        </div>
+<div class="input-group mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text">Add Action</span>
     </div>
+    <select class="custom-select" id="action-add" aria-label="Add action to current rundown">
+        <option selected>Choose...</option>
+        {% for action in actions %}
+            <option value="{{ action }}">{{ actions[action].get('display_name', action) }}</option>
+        {% endfor %}
+    </select>
+    <div class="input-group-append">
+        {{ create_button("", icon="plus", id="action-add-btn") }}
+    </div>
+</div>
 
-    <div class="mb-3">
-        {% for pos, action in enumerate(current_rundown['rundown']) %}
-            {% if action['name'] in actions %}
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        {{ create_button(pos, classes="input-group-text", role="textbox") }}
-                        {{ create_button(action.get('display_name', action['name']), classes="input-group-text", event=toggle_element(action['id'])) }}
-                        {% if caspar == "true" %}
-                            {{ create_button("", icon="play", classes="input-group-text", event=post('action_exec', data="{ rundown: '%s', action: '%s', service: 'caspar', event: 'html' }" % (current_rundown_name, action['id']) )) }}
-                            {{ create_button("", icon="stop", classes="input-group-text", event=post('action_exec', data="{ rundown: '%s', action: '%s', service: 'caspar', event: 'stop' }" % (current_rundown_name, action['id']) )) }}
-                            {{ create_button(value="", icon="times", classes="input-group-text", event=post('action_exec', data="{ rundown: '%s', action: '%s', service: 'caspar', event: 'clear' }" % (current_rundown_name, action['id']) )) }}
-                        {% endif %}
-                        {{ create_button("", icon="pen", classes="input-group-text", data_toggle="modal", data_target="#action-rename-%s" % action['id']) }}
-                        {{ create_button("", icon="trash", classes="input-group-text", data_toggle="modal", data_target="#action-deletion-%s" % action['id']) }}
-                    </div>
-                </div>
-                {{ create_modal(id="action-rename-"+action['id'],
+<div class="mb-3">
+    {% for pos, action in enumerate(current_rundown['rundown']) %}
+        {% if action['name'] in actions %}
+        <div class="input-group">
+            <div class="input-group-prepend">
+                {{ create_button(pos, classes="input-group-text", event=toggle_element(action['id']+'.values')) }}
+                {{ create_button(action.get('display_name', action['name']), classes="input-group-text", event=toggle_element(action['id']+'.updates')) }}
+                {% if caspar == "true" %}
+                    {{ create_button("", icon="play", classes="input-group-text", event=post('action_exec', data="{ rundown: '%s', action: '%s', service: 'caspar', event: 'html' }" % (current_rundown_name, action['id']) )) }}
+                    {{ create_button("", icon="stop", classes="input-group-text", event=post('action_exec', data="{ rundown: '%s', action: '%s', service: 'caspar', event: 'stop' }" % (current_rundown_name, action['id']) )) }}
+                    {{ create_button(value="", icon="times", classes="input-group-text", event=post('action_exec', data="{ rundown: '%s', action: '%s', service: 'caspar', event: 'clear' }" % (current_rundown_name, action['id']) )) }}
+                {% endif %}
+                {{ create_button("", icon="pen", classes="input-group-text", data_toggle="modal", data_target="#action-rename-%s" % action['id']) }}
+                {{ create_button("", icon="trash", classes="input-group-text", data_toggle="modal", data_target="#action-deletion-%s" % action['id']) }}
+            </div>
+        </div>
+        {{ create_modal(id="action-rename-"+action['id'],
                             header='Renaming ' + action.get('display_name', action['name']),
                             body='<textarea class="form-control textarea-modal" id="textarea-rename-%s" rows="1" style="resize: none;"></textarea>' % action['id'],
                             footer=create_button(value="Save", classes="btn-danger", id="action-rename-save-%s" % action['id'], data_dismiss="modal")) }}
-                {{ create_modal(id="action-deletion-"+action['id'],
+        {{ create_modal(id="action-deletion-"+action['id'],
                             header='Deleting ' + action.get('display_name', action['name']),
                             body="Are you sure?",
                             footer=create_button(value="Delete", classes="btn-danger", id="action-rename-delete-%s" % action['id'], data_dismiss="modal")) }}
-                <div id="{{ action['id'] }}" class="action-section" hidden>
+        <div id="{{ action['id'] }}.values" class="action-section" hidden>
 
-                    {% if 'fields' in actions[action['name']].keys() %}
-                        {% with action_fields = actions[action['name']]['fields'] %}
-                            <div class="row mb-2 mt-2">
-                                {% for field in action_fields %}
-                                    <div class="input-group col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">{{ camel_case(field[0], '_') }}</span>
-                                        </div>
-                                        <input
-                                                class="form-control param-btn"
-                                                aria-label="Set {{ field[0] }} value for action {{ action['name'] }}"
-                                                {% if len(field) > 1 %}value="{{ action['values'].get(field[0], field[1]) }}"{% endif %}
-                                                {% if len(field) > 2 %}type="{{ field[2] }}"{% endif %}
-                                                oninput="$.post('{{ url_for(name+'.save_value') }}', { uuid: '{{ action['id'] }}', key: '{{ field[0] }}', value: this.value})"
-                                        >
-                                    </div>
-                                {% endfor %}
+            {% if 'fields' in actions[action['name']].keys() %}
+                {% with action_fields = actions[action['name']]['fields'] %}
+                    <div class="row mb-2 mt-2">
+                        {% for field in action_fields %}
+                            <div class="input-group col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">{{ camel_case(field[0], '_') }}</span>
+                                </div>
+                                <input
+                                        class="form-control param-btn"
+                                        aria-label="Set {{ field[0] }} value for action {{ action['name'] }}"
+                                        {% if len(field) > 1 %}value="{{ action['values'].get(field[0], field[1]) }}"{% endif %}
+                                        {% if len(field) > 2 %}type="{{ field[2] }}"{% endif %}
+                                        oninput="$.post('{{ url_for(name+'.save_value') }}', { uuid: '{{ action['id'] }}', key: '{{ field[0] }}', value: this.value})"
+                                >
                             </div>
-                        {% endwith %}
-                    {% endif %}
-                    {% if 'groups' in actions[action['name']].keys() %}
-                        {% with groups = actions[action['name']]['groups'] %}
-                            <div class="input-group mb-2">
+                        {% endfor %}
+                    </div>
+                {% endwith %}
+            {% endif %}
+            {% if 'groups' in actions[action['name']].keys() %}
+                {% with groups = actions[action['name']]['groups'] %}
+                    <div class="input-group mb-2">
 
-                                {% for group in groups %}
-                                    {{ create_button(group['display_name'] if 'display_name' in group.keys() else group['name'],
+                        {% for group in groups %}
+                            {{ create_button(group['display_name'] if 'display_name' in group.keys() else group['name'],
                                             classes="input-group-text",
                                             event=toggle_element("%s.groups.%s" % (action['id'], group['name']))) }}
-                                {% endfor %}
-                            </div>
+                        {% endfor %}
+                    </div>
 
-                            {% for group in groups %}
-                                <div id="{{ action['id'] }}.groups.{{ group['name'] }}" style="padding-left: 10px;" hidden>
-                                    {% if 'fields' in group.keys() %}
-                                        <div class="row mb-2 mt-2">
-                                            {% for field in group['fields'] %}
-                                                <div class="input-group col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
-                                                    <div class="input-group-prepend">
-                                                        <span class="input-group-text">{{ camel_case(field[0], '_') }}</span>
-                                                    </div>
-                                                    <input
-                                                            aria-label="Set {{ field[0] }} value for action {{ action['name'] }}"
-                                                            {% if group.get('area', 'local') == 'global' %}
-                                                            {% if len(field) > 1 %}value="{{ current_rundown['global'].get(group['name'], {}).get(field[0], field[1]) }}"
-                                                            {% endif %}
-                                                            {% else %}
-                                                            {% if len(field) > 1 %}value="{{ action['values'].get(field[0], field[1]) }}"
-                                                            {% endif %}
-                                                            {% endif %}
-                                                            {% if len(field) > 2 %}type="{{ field[2] }}"{% endif %}
-                                                            {% if group.get('area', 'local') == 'global' %}
-                                                            class="form-control param-btn {{ group['name'] }}.{{ field[0] }}"
-                                                            oninput="
-                                                                    $.post('{{ url_for(name+'.save_global_value') }}', { action: '{{ action['name'] }}', key: '{{ field[0] }}', group: '{{ group['name'] }}', value: this.value});
-                                                                    elements = document.getElementsByClassName('{{ group['name'] }}.{{ field[0] }}');
-                                                                    for (let i = 0; i < elements.length; i++) {
-                                                                    elements[i].setAttribute('value', this.value);
-                                                                    }
-                                                                    "
-                                                            {% else %}
-                                                            class="form-control param-btn"
-                                                            oninput="$.post('{{ url_for(name+'.save_value') }}', { uuid: '{{ action['id'] }}', key: '{{ field[0] }}', value: this.value})"
-                                                            {% endif %}
-                                                    >
-                                                </div>
-                                            {% endfor %}
+                    {% for group in groups %}
+                        <div id="{{ action['id'] }}.groups.{{ group['name'] }}" style="padding-left: 10px;"
+                             hidden>
+                            {% if 'fields' in group.keys() %}
+                                <div class="row mb-2 mt-2">
+                                    {% for field in group['fields'] %}
+                                        <div class="input-group col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">{{ camel_case(field[0], '_') }}</span>
+                                            </div>
+                                            <input
+                                                    aria-label="Set {{ field[0] }} value for action {{ action['name'] }}"
+                                                    {% if group.get('area', 'local') == 'global' %}
+                                                    {% if len(field) > 1 %}value="{{ current_rundown['global'].get(group['name'], {}).get(field[0], field[1]) }}"
+                                                    {% endif %}
+                                                    {% else %}
+                                                    {% if len(field) > 1 %}value="{{ action['values'].get(field[0], field[1]) }}"
+                                                    {% endif %}
+                                                    {% endif %}
+                                                    {% if len(field) > 2 %}type="{{ field[2] }}"{% endif %}
+                                                    {% if group.get('area', 'local') == 'global' %}
+                                                    class="form-control param-btn {{ group['name'] }}.{{ field[0] }}"
+                                                    oninput="
+                                                            $.post('{{ url_for(name+'.save_global_value') }}', { action: '{{ action['name'] }}', key: '{{ field[0] }}', group: '{{ group['name'] }}', value: this.value});
+                                                            elements = document.getElementsByClassName('{{ group['name'] }}.{{ field[0] }}');
+                                                            for (let i = 0; i < elements.length; i++) {
+                                                            elements[i].setAttribute('value', this.value);
+                                                            }
+                                                            "
+                                                    {% else %}
+                                                    class="form-control param-btn"
+                                                    oninput="$.post('{{ url_for(name+'.save_value') }}', { uuid: '{{ action['id'] }}', key: '{{ field[0] }}', value: this.value})"
+                                                    {% endif %}
+                                            >
                                         </div>
-                                    {% endif %}
+                                    {% endfor %}
                                 </div>
-                            {% endfor %}
-                        {% endwith %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% endwith %}
+            {% endif %}
+        </div>
+        {% if 'updates' in actions[action['name']].keys() and caspar == "true" %}
+            <div id="{{ action['id'] }}.updates" hidden>
+            {% for update in actions[action['name']]['updates'] %}
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    {{ create_button(" ", icon="chevron-right", classes="input-group-text", event=toggle_element(action['id']+'.updates.'+update['function']+'.fields')) }}
+                    {{ create_button(update.get('display_name', update['function'] + '()'), classes="input-group-text") }}
+                    {% if caspar == "true" %}
+                        {{ create_button("", icon="play", classes="input-group-text", event=post('action_exec', data="{ rundown: '%s', action: '%s', service: 'caspar', event: 'update', func: '%s' }" % (current_rundown_name, action['id'], update['function']) )) }}
                     {% endif %}
                 </div>
+            </div>
+            {% if 'fields' in update.keys() %}
+                <div id="{{ action['id'] }}.updates.{{ update['function'] }}.fields" hidden>
+                {% with update_fields = update['fields'] %}
+                    <div class="row mb-2 mt-2">
+                        {% for field in update_fields %}
+                            <div class="input-group col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">{{ camel_case(field[0], '_') }}</span>
+                                </div>
+                                <input
+                                        class="form-control param-btn"
+                                        aria-label="Set {{ field[0] }} value for action {{ action['name'] }} in update {{ update['function'] }}"
+                                        {% if len(field) > 1 %}value="{{ action.get('updates', {}).get(update['function'], {}).get(field[0], field[1]) }}"{% endif %}
+                                        {% if len(field) > 2 %}type="{{ field[2] }}"{% endif %}
+                                        oninput="$.post('{{ url_for(name+'.save_update_value') }}', { uuid: '{{ action['id'] }}', func: '{{ update['function'] }}', key: '{{ field[0] }}', value: this.value})"
+                                >
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endwith %}
+                </div>
             {% endif %}
-        {% endfor %}
+
+    {% endfor %}
     </div>
+
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+</div>
 
 {% endblock %}
 
 {% macro post(url, data="", after="") -%}
-    $.post('{{ url_for(name+'.'+url|safe) }}'{% if data != "" %}, {{ data|safe }}{% endif %}){% if after != "" %}.always(() => { {{ after|safe }} }){% endif %};
+    $.post('{{ url_for(name+'.'+url|safe) }}'{% if data != "" %}, {{ data|safe }}{% endif %}){% if after != "" %}
+    .always(() => { {{ after|safe }} }){% endif %};
 {%- endmacro %}

@@ -9,6 +9,7 @@ from webapi.libs.api.parsing import is_set, param
 from . import api_prefix
 
 from .. import bp, config, name, logger
+from ..dashboard.actions import get_update_params
 from ..libs.caspar import connector
 
 caspar_prefix: str = f'{api_prefix}/caspar'
@@ -56,6 +57,24 @@ def caspar_play_html():
 
 @bp.route(f'{caspar_prefix}/call', methods=['GET', 'POST'])
 def caspar_call():
+    """
+    Call CasparCG server to invoke a javascript function on a loaded html site.
+
+    Arguments:
+        - rundown, name of the rundown
+        - action, uuid of the action that stores all update values
+        - channel, casparcg channel
+        - layer, casparcg layer
+        - function, name of the js function
+
+    :return: http response code
+    """
+    rundown = param('rundown')
+    if not is_set(rundown):
+        return redirect_or_response(400, 'Missing parameter rundown')
+    action = param('action')
+    if not is_set(action):
+        return redirect_or_response(400, 'Missing parameter action')
     channel = param('channel')
     if not is_set(channel):
         return redirect_or_response(400, 'Missing parameter channel')
@@ -66,7 +85,16 @@ def caspar_call():
     if not is_set(javascript):
         return redirect_or_response(400, 'Missing parameter function')
 
-    command = f'CALL {channel}-{layer} {javascript}'
+    try:
+        params = get_update_params(rundown, action, javascript)
+    except ValueError as e:
+        return redirect_or_response(400, str(e))
+
+    params_string: str = ""
+    if params != {}:
+        params_string = ", ".join(["%s='%s'" % (k, v) for k, v in params.items()])
+
+    command = f'CALL {channel}-{layer} "{javascript}({params_string})"'
 
     server, port = _get_server_and_port()
 

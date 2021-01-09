@@ -124,11 +124,11 @@ def show_action():
 
     values = {**values, **action['values']}
 
-    for field in get_actions()[action['name']]['fields']:
+    for field in get_actions()[action['name']].get('fields', []):
         if field[0] not in values:
             values[field[0]] = field[1]
-    for group in get_actions()[action['name']]['groups']:
-        for field in group['fields']:
+    for group in get_actions()[action['name']].get('groups', []):
+        for field in group.get('fields', []):
             if field[0] not in values:
                 values[field[0]] = field[1]
 
@@ -139,6 +139,44 @@ def show_action():
         return response(404, 'Action template file not found', graphical=True)
 
     return render_template(f'overlays/{filename}', **values)
+
+
+def get_update_params(rundown_name: str, action_uuid: str, func: str) -> dict:
+    """
+    Gathers and returns a dictionary of key value pairs that represent the values saved for a given update function.
+
+    :param rundown_name: name of the rundown
+    :param action_uuid: uuid of the selected action
+    :param func: name of the function to be executed
+
+    :return: key value dict (string pairs)
+    :raises ValueError: if action_uuid is invalid
+    """
+    if rundown_name not in get_rundowns():
+        return redirect_or_response(400, 'Rundown name unknown')
+    rundown = get_rundowns()[rundown_name]
+
+    action: dict = None
+    for e in rundown['rundown']:
+        if e['id'] == action_uuid:
+            action = e
+    if not action:
+        raise ValueError('Invalid action uuid')
+
+    if func == "fadeout":
+        pass #TODO Add fadeout parameter passing
+
+    values: dict = {}
+    if 'updates' in action.keys() and func in action['updates'].keys():
+        values = action['updates'][func].copy()
+
+    for update in get_actions()[action['name']].get('updates'):
+        if update['function'] == func:
+            for field in update.get('fields', []):
+                if field[0] not in values:
+                    values[field[0]] = field[1]
+
+    return values
 
 
 @bp.route(f'{url_prefix}/reload', methods=['GET'])
