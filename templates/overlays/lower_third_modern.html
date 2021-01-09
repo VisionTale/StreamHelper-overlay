@@ -1,0 +1,194 @@
+{% extends "overlays/overlay_base.html" %}
+
+{% block page_style %}
+
+    <style>
+        #frame {
+            position: fixed;
+            top: {{ frame_top }};
+            height: {{ frame_height }};
+            left: {{ frame_left }};
+            width: {{ frame_width }};
+            background-color: {{ frame_color }};
+            transform: {{ frame_rotation }};
+            -webkit-transform: {{ frame_rotation }};
+        }
+
+        #title {
+            position: fixed;
+            top: {{ title_top }};
+            left: {{ title_left }};
+            font-size: {{ title_font_size }};
+            font-family: {{ title_font_family }};
+            color: {{ title_color }};
+
+        }
+
+        #subtitle {
+            position: fixed;
+            top: {{ subtitle_top }};
+            left: {{ subtitle_left }};
+            font-size: {{ subtitle_font_size }};
+            color: {{ subtitle_color }};
+        }
+
+        #overlay {
+            position: fixed;
+            top: {{ frame_top }};
+            height: {{ frame_height }};
+            left: {{ frame_left }};
+            width: 0;
+            z-index: 100;
+        }
+
+        #inner_overlay {
+            position: relative;
+            transform: {{ frame_rotation }};
+            -webkit-transform: {{ frame_rotation }};
+            background-color: {{ blend_in_color }};
+            height: 100%;
+            width: 100%;
+        }
+
+    </style>
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <div id="frame" class="inv"></div>
+        <div id="title" class="inv">{{ title }}</div>
+        <div id="subtitle" class="inv">{{ subtitle }}</div>
+        <div id="overlay">
+            <div id="inner_overlay"></div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block page_scripts %}
+
+    <script>
+        function update_title(title, subtitle) {
+            document.getElementById('title').innerText = title;
+            document.getElementById('subtitle').innerText = subtitle;
+        }
+
+    </script>
+
+{% endblock %}
+
+{% block fadein %}
+    <script src="{{ url_for('.static', filename='anime.js') }}"></script>
+
+    <script>
+        function fadein(time) {
+            console.log(time);
+
+            {#
+            const timeline = anime.timeline({
+                easing: 'easeInOutQuad',
+                duration: 3000
+            });
+            timeline.add({
+                targets: '#overlay',
+                width: '{{ frame_width }}'
+            }).add({
+                targets: '#overlay',
+                delay: 500,
+                width: '0'
+            });
+            #}
+
+            {#
+            const timeline = anime.timeline({
+                easing: 'easeInOutQuad',
+                duration: 3000,
+                update: function(anim) {
+                    if (timeline.progress < 50) {
+
+                    }
+                    console.log(timeline.progress);
+                },
+                begin: function (anim) {
+                    console.log("Just the beginning")
+                },
+                complete: function (anim) {
+                    console.log("Its the end")
+                }
+            });
+            timeline.add({
+                targets: '#overlay',
+                width: '{{ frame_width }}',
+            }).add({
+                targets: '#overlay',
+                delay: 500,
+                width: '0',
+                translateX: '{{ frame_width }}'
+            });
+
+            #}
+
+            anime({
+                easing: 'easeInOutQuad',
+                duration: time/2,
+                targets: '#overlay',
+                width: '{{ frame_width }}',
+                complete: function (anim) {
+                    const inv = document.getElementsByClassName('inv');
+                    while (inv.length > 0) {
+                        inv[0].classList.remove('inv');
+                    }
+                    anime({
+                        easing: 'easeInOutQuad',
+                        duration: time/2,
+                        delay: 400,
+                        targets: '#overlay',
+                        width: '0',
+                        translateX: '{{ frame_width }}'
+                    })
+                }
+            })
+
+
+        }
+    </script>
+{% endblock %}
+
+{% block fadeout %}
+    <script src="{{ url_for('.static', filename='anime.js') }}"></script>
+
+    <script>
+        function fadeout(time) {
+
+            document.getElementById('overlay').style.left = "{{ frame_left }}";
+            document.getElementById('overlay').style.transform = "";
+
+            anime({
+                easing: 'easeInOutQuad',
+                duration: 1400 / 2,
+                targets: '#overlay',
+                width: '{{ frame_width }}',
+                complete: function (anim) {
+                    document.getElementById('frame').classList.add('inv');
+                    document.getElementById('title').classList.add('inv');
+                    document.getElementById('subtitle').classList.add('inv');
+                    anime({
+                        easing: 'easeInOutQuad',
+                        duration: 1400 / 2,
+                        delay: 400,
+                        targets: '#overlay',
+                        width: '0',
+                        translateX: '{{ frame_width }}'
+                    })
+                }
+            });
+                        console.log({{ int(fadeout) / 2 }});
+
+
+
+        }
+    </script>
+{% endblock %}

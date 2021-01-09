@@ -43,3 +43,14 @@
     </div>
 
 {% endblock %}
+
+{% block page_scripts %}
+
+    <script>
+        function update_title(title, subtitle) {
+            document.getElementById('title').innerText = title;
+            document.getElementById('subtitle').innerText = subtitle;
+        }
+    </script>
+
+{% endblock %}

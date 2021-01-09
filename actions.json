@@ -27,38 +27,167 @@
                     ["subtitle_text_color", "#FFFFFF", "color"]
                 ]
             }
+        ],
+        "updates": [
+            {
+                "display_name": "Update Title",
+                "function": "update_title",
+                "fields": [
+                    ["title", "", "text"],
+                    ["subtitle", "", "text", "subtitle"]
+                ]
+            },
+            {
+                "function": "update_subtitle",
+                "fields": [
+                    ["title", "", "text"],
+                    ["subtitle", "", "text", "subtitle"]
+                ]
+            }
         ]
     },
-    "social_media": {
-        "filename": "social_media.html",
+    "modern_lower_third": {
+        "filename": "lower_third_modern.html",
         "fields": [
-            ["message", "", "text"],
-            ["tag", "", "text"],
-            ["fadein", "1000", "number"],
-            ["hold", "6000", "number"],
-            ["fadeout", "1000", "number1000"],
-            ["message_color", "#242582", "color"],
-            ["tag_color", "#2F2FA2", "color"],
-            ["message_text_color", "#FFFFFF", "color"],
-            ["tag_text_color", "#FFFFFF", "color"]
+            ["title", "", "text"],
+            ["subtitle", "", "text"]
+        ],
+        "groups": [
+            {
+                "name": "global",
+                "display_name": "Global",
+                "area": "global",
+                "fields": [
+                    ["fadein", "1000", "number"],
+                    ["hold", "6000", "number"],
+                    ["fadeout", "1000", "number"]
+                ]
+            },
+            {
+                "name": "frame",
+                "display_name": "Frame",
+                "area": "global",
+                "fields": [
+                    ["frame_top", "60vh", "text"],
+                    ["frame_left", "0", "text"],
+                    ["frame_height", "10vh", "text"],
+                    ["frame_width", "42vw", "text"],
+                    ["frame_rotation", "skew(-20deg)", "text"],
+                    ["frame_color", "#FFFFFF", "color"],
+                    ["blend_in_color", "#AAAAAA", "color"]
+
+                ]
+            },
+            {
+                "name": "title",
+                "display_name": "Title",
+                "area": "global",
+                "fields": [
+                    ["title_top", "62vh", "text"],
+                    ["title_left", "20vw", "text"],
+                    ["title_font_size", "30px", "text"],
+                    ["title_font_family", "Tahoma, sans-serif", "text"],
+                    ["title_color", "#000000", "color"]
+                ]
+            },
+            {
+                "name": "subtitle",
+                "display_name": "Subtitle",
+                "area": "global",
+                "fields": [
+                    ["subtitle_top", "66vh", "text"],
+                    ["subtitle_left", "20vw", "text"],
+                    ["subtitle_font_size", "24px", "text"],
+                    ["subtitle_font_family", "Tahoma, sans-serif", "text"],
+                    ["subtitle_color", "#000000", "color"]
+                ]
+            }
+        ],
+        "updates": [
+            {
+                "display_name": "Update Title",
+                "function": "update_title",
+                "fields": [
+                    ["title", "", "text"],
+                    ["subtitle", "", "text"]
+                ]
+            }
+        ]
+    },
+    "simple_countdown": {
+        "filename": "simple_countdown.html",
+        "fields": [
+            ["duration", "60", "number"]
+        ],
+        "groups": [
+            {
+                "name": "fade",
+                "display_name": "Fade",
+                "area": "global",
+                "fields": [
+                    ["fadein", "1000", "number"],
+                    ["hold", "0", "number"],
+                    ["fadeout", "1000", "number"]
+                ]
+            },
+            {
+                "name": "setup",
+                "display_name": "Setup",
+                "area": "global",
+                "fields": [
+                    ["top", "50%", "text"],
+                    ["left", "50%", "text"],
+                    ["height", "800px", "text"],
+                    ["width", "800px", "text"]
+                ]
+            },
+            {
+                "name": "time",
+                "display_name": "Time",
+                "area": "global",
+                "fields": [
+                    ["text_color", "#ffffff", "color"],
+                    ["text_size", "70px", "text"],
+                    ["text_family", "Tahoma, sans-serif", "text"]
+                ]
+            },
+            {
+                "name": "ring",
+                "display_name": "Ring",
+                "area": "global",
+                "fields": [
+                    ["ring_color", "#DC2A0F", "color"],
+                    ["ring_width", "2px", "text"]
+                ]
+            }
         ]
     },
     "centered_title": {
         "filename": "centered_title.html",
         "fields": [
-            ["title", "", "text"],
-            ["fadein", "1000", "number"],
-            ["hold", "6000", "number"],
-            ["fadeout", "1000", "number"],
-            ["title_size", "42px", "text"],
-            ["title_color", "#242582", "color"],
-            ["title_text_color", "#FFFFFF", "color"]
+            ["title", "", "text"]
+        ],
+        "groups": [
+            {
+                "name": "fade",
+                "display_name": "Fade",
+                "area": "global",
+                "fields": [
+                    ["fadein", "1000", "number"],
+                    ["hold", "0", "number"],
+                    ["fadeout", "1000", "number"]
+                ]
+            },
+            {
+                "name": "title",
+                "display_name": "Title",
+                "area": "global",
+                "fields": [
+                    ["title_size", "42px", "text"],
+                    ["title_color", "#242582", "color"],
+                    ["title_text_color", "#FFFFFF", "color"]
+                ]
+            }
         ]
     }
 }
-
-
-
-
-
-

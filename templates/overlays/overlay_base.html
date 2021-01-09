@@ -1,30 +1,34 @@
 {%- extends "bootstrap/base.html" %}
 
 {% block head %}
-    {{super()}}
+    {{ super() }}
 
     <link rel="icon" type="image/ico" href="{{ url_for('static', filename='ico/visiontale16.ico') }}">
 
     {% if title %}
-    <title>{{ title }} - Overlay</title>
+        <title>{{ title }} - Overlay</title>
     {% else %}
-    <title>Overlay</title>
+        <title>Overlay</title>
     {% endif %}
 
 {%- endblock %}
 
 {% block styles -%}
-    {{super()}}
+    {{ super() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-' + get_bootstrap_version() + '-dist/css/bootstrap.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap-' + get_bootstrap_version() + '-dist/css/bootstrap-grid.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='bootstrap-' + get_bootstrap_version() + '-dist/css/bootstrap.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='bootstrap-' + get_bootstrap_version() + '-dist/css/bootstrap-grid.css') }}">
 
     <style>
         body {
             background-color: #00000000 !important;
             width: 100% !important;
             height: 100% !important;
+        }
+        .inv {
             display: none;
         }
     </style>
@@ -34,7 +38,7 @@
 
 
 {% block content %}
-    <div class="container">
+    <div class="container inv">
         {% block page_content %}{% endblock %}
     </div>
 {% endblock %}
@@ -43,14 +47,39 @@
     <script src="{{ url_for('static', filename='jquery/jquery-' + get_jquery_version() + '.min.js') }}"></script>
     <script src="{{ url_for('static', filename='bootstrap-' + get_bootstrap_version() + '-dist/js/bootstrap.js') }}"></script>
 
-    <script>
-        {% if hold and int(hold) != 0 %}
-            $('body').fadeIn({{ fadein }}).delay({{ hold }}).fadeOut({{ fadeout }});
-        {% else %}
-            $('body').fadeIn({{ fadein }});
-            function fadeout() {
-                $('body').fadeOut({{ fadeout }});
+    {% block fadein %}
+        <script>
+            function fadein(time) {
+                $('.inv').fadeIn({{ fadein }});
             }
+        </script>
+    {% endblock %}
+    {% block hold %}
+        <script>
+            function hold(time) {
+                setTimeout(() => {
+                }, time)
+            }
+        </script>
+    {% endblock %}
+    {% block fadeout %}
+        <script>
+            function fadeout(time) {
+                $('.inv').fadeOut(time);
+            }
+        </script>
+    {% endblock %}
+    <script>
+        fadein({{ fadein }});
+        {% if hold and int(hold) != 0 %}
+            hold({{ hold }});
+            fadeout({{ fadeout }});
         {% endif %}
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
     </script>
+
+    {% block page_scripts %}{% endblock %}
 {% endblock %}
