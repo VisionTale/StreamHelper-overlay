@@ -122,9 +122,12 @@ def save_global_value():
     value = param('value', '')
 
     current_rundown = get_current_rundown()
-    if group not in current_rundown['global']:
-        current_rundown['global'][group] = dict()
-    current_rundown['global'][group][key] = value
+    if action not in current_rundown['global']:
+        current_rundown['global'][action] = dict()
+    if group not in current_rundown['global'][action]:
+        current_rundown['global'][action][group] = dict()
+
+    current_rundown['global'][action][group][key] = value
 
     _save_rundowns()
 

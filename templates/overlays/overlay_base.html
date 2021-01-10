@@ -71,10 +71,12 @@
     {% endblock %}
     <script>
         fadein({{ fadein }});
-        {% if hold and int(hold) != 0 %}
+        {#
+        {% if hold and int(hold) > 0 %}
             hold({{ hold }});
             fadeout({{ fadeout }});
         {% endif %}
+        #}
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));

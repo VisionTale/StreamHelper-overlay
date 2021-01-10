@@ -85,7 +85,7 @@
 
     <script>
         function fadein(time) {
-            console.log(time);
+            console.log('Fadein!');
 
             {#
             const timeline = anime.timeline({
@@ -137,10 +137,9 @@
                 targets: '#overlay',
                 width: '{{ frame_width }}',
                 complete: function (anim) {
-                    const inv = document.getElementsByClassName('inv');
-                    while (inv.length > 0) {
-                        inv[0].classList.remove('inv');
-                    }
+                    document.getElementById('frame').classList.remove('inv');
+                    document.getElementById('title').classList.remove('inv');
+                    document.getElementById('subtitle').classList.remove('inv');
                     anime({
                         easing: 'easeInOutQuad',
                         duration: time/2,
@@ -162,7 +161,7 @@
 
     <script>
         function fadeout(time) {
-
+            console.log('Fadeout!');
             document.getElementById('overlay').style.left = "{{ frame_left }}";
             document.getElementById('overlay').style.transform = "";
 
@@ -185,9 +184,6 @@
                     })
                 }
             });
-                        console.log({{ int(fadeout) / 2 }});
-
-
 
         }
     </script>

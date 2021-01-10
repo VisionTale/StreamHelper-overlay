@@ -119,8 +119,9 @@ def show_action():
         return redirect_or_response(400, "Actions uuid unknown")
 
     values: dict = request.args.to_dict() or request.form.to_dict()
-    for group in rundown['global']:
-        values = {**values, **rundown['global'][group]}
+    if action['name'] in rundown['global']:
+        for group in rundown['global'][action['name']]:
+            values = {**values, **rundown['global'][action['name']][group]}
 
     values = {**values, **action['values']}
 
